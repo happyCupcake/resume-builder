@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Complete</title>
+</head>
+<body>
+    <h1>Payment Successful!</h1>
+    <p>Your optimized resume is ready.</p>
+    <a href="/">Return to Resume Builder</a>
+    <script>
+        // If payment was successful, show the results
+        window.onload = () => {
+            window.opener.showFullResults();  // We'll implement this function
+            window.close();
+        };
+    </script>
+</body>
+</html>

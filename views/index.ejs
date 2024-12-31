@@ -1,0 +1,406 @@
+<!-- views/index.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Optimizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 150px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        .auth-section {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        #userStatus {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #loginBtn, #logoutBtn {
+            background-color: #4285f4;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #loginBtn:hover, #logoutBtn:hover {
+            background-color: #357abd;
+        }
+
+        #userName {
+            font-weight: bold;
+        }
+
+        .preview-content {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .payment-section {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .payment-button {
+            background-color: #5469d4;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .payment-button:hover {
+            background-color: #4054b2;
+        }
+
+        #payment-form {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background: white;
+        }
+
+    </style>
+        <!-- ... your existing head content ... -->
+        <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+        <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Add this login section first -->
+        <div class="auth-section">
+            <div id="userStatus">
+                <span id="userName"></span>
+                <button id="loginBtn" style="display: none;">Sign in with Google</button>
+                <button id="logoutBtn" style="display: none;">Logout</button>
+        </div>
+    </div>
+        <h1>AI Resume Optimizer</h1>
+        <form id="resumeForm">
+            <div class="form-group">
+                <label for="jobDescription">Job Description:</label>
+                <textarea id="jobDescription" name="jobDescription" 
+                    placeholder="Paste the job description here..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="resume">Your Current Resume:</label>
+                <textarea id="resume" name="resume" 
+                    placeholder="Paste your current resume here..."></textarea>
+            </div>
+
+            <button type="submit">Analyze and Optimize</button>
+        </form>
+
+        <div id="result">
+            <h2>Analysis Results</h2>
+                <!-- Preview Section -->
+                <div id="previewSection">
+                    <div id="fieldResult"></div>
+                    <div class="preview-content">
+                        <h3>Preview of Optimizations:</h3>
+                        <ul id="previewPoints"></ul>
+                    </div>
+                    <div class="payment-section">
+                        <button id="buyButton" class="payment-button">
+                            Unlock Full Results ($5)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Full Results Section (hidden until payment) -->
+                <div id="fullResults" style="display: none;">
+                    <h3>Your Optimized Resume:</h3>
+                    <div id="optimizedResume"></div>
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDD_Z9FfF8N-MugynTww8ftxjxDDnSQKu4",
+            authDomain: "resume-builder-a61af.firebaseapp.com",
+            projectId: "resume-builder-a61af",
+            storageBucket: "resume-builder-a61af.firebasestorage.app",
+            messagingSenderId: "451166726638",
+            appId: "1:451166726638:web:9330dbe1009f42c25946ff"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        const stripe = Stripe('pk_test_51Qbz0xA4w79MCEbrndfTRU1kGUSlu8haJi1xQrSyhErR43l3P12ql31w4qnrOyibYvc9vYwmTi5NgVz8mcbxJ5P700ttLuIYuA');  // Use your test publishable key
+
+
+        // Auth elements
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userName = document.getElementById('userName');
+        const resumeForm = document.getElementById('resumeForm');
+        const buyButton = document.getElementById('buyButton');
+
+        // Auth state observer
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            // User is signed in
+            loginBtn.style.display = 'none';
+            logoutBtn.style.display = 'inline-block';
+            userName.textContent = `Welcome, ${user.displayName}!`;
+            resumeForm.style.display = 'block';
+            window.userId = user.uid;
+            
+            // Clear any previous results when logging in
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('fullResults').style.display = 'none';
+        } else {
+            // User is signed out
+            loginBtn.style.display = 'inline-block';
+            logoutBtn.style.display = 'none';
+            userName.textContent = '';
+            resumeForm.style.display = 'none';
+            window.userId = null;
+            
+            // Clear results on logout
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('fullResults').style.display = 'none';
+        }
+    });
+
+    // Sign in with Google
+    loginBtn.addEventListener('click', () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithPopup(provider);
+    });
+
+    // Sign out
+    logoutBtn.addEventListener('click', () => {
+        firebase.auth().signOut();
+    });
+
+    // Add this function to handle showing results
+    function showFullResults() {
+        document.getElementById('fullResults').style.display = 'block';
+        document.getElementById('optimizedResume').innerHTML = window.fullResults;
+        document.querySelector('.payment-section').style.display = 'none';
+}
+
+
+    // Form submission handler
+    resumeForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!window.userId) {
+            alert('Please login first');
+            return;
+        }
+
+        try {
+            const jobDescription = document.getElementById('jobDescription').value;
+            const resume = document.getElementById('resume').value;
+            
+            // Show loading state if you have one
+            // loadingSpinner.style.display = 'block';
+            resumeForm.querySelector('button').disabled = true;
+
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    jobDescription, 
+                    resume,
+                    userId: window.userId 
+                })
+            });
+            
+            const data = await response.json();
+            console.log('Received data:', data);  // Add this
+            
+            if (data.success) {
+                // Show results section
+                document.getElementById('result').style.display = 'block';
+                
+                // Update field detection
+                document.getElementById('fieldResult').innerHTML = `
+                    <p><strong>Detected Field:</strong> ${data.field}</p>
+                `;
+                
+                // Show preview points
+                const previewPoints = document.getElementById('previewPoints');
+                previewPoints.innerHTML = `
+                    <li>Field: ${data.field || 'Not detected'}</li>
+                    <li>Keyword Match Score: ${data.score || 0}%</li>
+                    <li>Top Keywords Found:
+                          <ul>
+                                ${data.matchedKeywords && data.matchedKeywords.length > 0 
+                                    ? data.matchedKeywords.map(keyword => `<li>${keyword}</li>`).join('')
+                                    : '<li>No keywords found</li>'}
+            </ul>
+                    </li>
+                    <li>Areas for Improvement Available</li>
+                `;
+                console.log('Updated preview points'); // Add this
+
+                // Store full results for after payment
+                window.fullResults = data.optimizedResume;
+                
+                // Show buy button
+                buyButton.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred during analysis');
+        } finally {
+            // Hide loading state
+            resumeForm.querySelector('button').disabled = false;
+        }
+    });
+
+   // Replace the existing buyButton click handler with this:
+buyButton.addEventListener('click', async () => {
+    if (!window.userId) {
+        alert('Please login first');
+        return;
+    }
+
+    try {
+        buyButton.disabled = true;
+        buyButton.textContent = 'Processing...';
+
+        // Create payment intent
+        const response = await fetch('/create-payment-intent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId: window.userId
+            })
+        });
+
+        const { clientSecret } = await response.json();
+
+        const appearance = {
+            theme: 'stripe',
+            variables: {
+                colorPrimary: '#5469d4',
+            }
+        };
+
+        elements = stripe.elements({ appearance, clientSecret });
+        const paymentElement = elements.create('payment');
+        
+        // Add payment form to the page
+        const paymentForm = document.createElement('div');
+        paymentForm.id = 'payment-form';
+        document.querySelector('.payment-section').appendChild(paymentForm);
+        paymentElement.mount('#payment-form');
+
+        // Add pay now button
+        const payNowButton = document.createElement('button');
+        payNowButton.textContent = 'Pay Now';
+        payNowButton.className = 'payment-button';
+        payNowButton.style.marginTop = '20px';
+        document.querySelector('.payment-section').appendChild(payNowButton);
+
+        // Handle payment submission
+        payNowButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            payNowButton.disabled = true;
+            payNowButton.textContent = 'Processing...';
+
+            const { error } = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    return_url: `${window.location.origin}/payment-complete`,
+                }
+            });
+
+            if (error) {
+                payNowButton.disabled = false;
+                payNowButton.textContent = 'Pay Now';
+                alert(error.message);
+            } else {
+                // Payment successful - show full results
+                document.getElementById('fullResults').style.display = 'block';
+                document.getElementById('optimizedResume').innerHTML = window.fullResults;
+                paymentForm.remove();
+                payNowButton.remove();
+                buyButton.style.display = 'none';
+            }
+        });
+
+    } catch (error) {
+        console.error('Payment Error:', error);
+        alert('Payment failed: ' + error.message);
+    } finally {
+        buyButton.disabled = false;
+        buyButton.textContent = 'Unlock Full Results ($5)';
+    }
+});
+
+
+    </script>
+</body>
+</html>
