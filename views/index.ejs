@@ -117,6 +117,20 @@
             border-radius: 4px;
             background: white;
         }
+        /* Add to your style section */
+        #fullResults {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #optimizedResume {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 14px;
+        }
 
     </style>
         <!-- ... your existing head content ... -->
@@ -191,6 +205,39 @@
 
         const stripe = Stripe('pk_test_51Qbz0xA4w79MCEbrndfTRU1kGUSlu8haJi1xQrSyhErR43l3P12ql31w4qnrOyibYvc9vYwmTi5NgVz8mcbxJ5P700ttLuIYuA');  // Use your test publishable key
 
+        window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectStatus = urlParams.get('redirect_status');
+    console.log('Redirect status:', redirectStatus);
+    
+    if (redirectStatus === 'succeeded') {
+        const storedResume = sessionStorage.getItem('optimizedResume');
+        console.log('Retrieved from session storage:', storedResume);
+        
+        if (storedResume) {
+            // Make sure form is hidden and results are shown
+            document.getElementById('resumeForm').style.display = 'none';  // Hide the form
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            console.log('Result div display style:', resultDiv.style.display);
+
+            const fullResultsDiv = document.getElementById('fullResults');
+            fullResultsDiv.style.display = 'block';
+            console.log('Full results div display style:', fullResultsDiv.style.display);
+
+            const optimizedResumeDiv = document.getElementById('optimizedResume');
+            optimizedResumeDiv.innerHTML = storedResume;
+            optimizedResumeDiv.style.whiteSpace = 'pre-wrap';
+            
+            // Hide the preview and payment sections
+            document.getElementById('previewSection').style.display = 'none';
+            document.querySelector('.payment-section').style.display = 'none';
+            
+            console.log('All display properties set');
+        }
+    }
+});
 
         // Auth elements
         const loginBtn = document.getElementById('loginBtn');
@@ -200,31 +247,42 @@
         const buyButton = document.getElementById('buyButton');
 
         // Auth state observer
-    firebase.auth().onAuthStateChanged((user) => {
-        if (user) {
-            // User is signed in
-            loginBtn.style.display = 'none';
-            logoutBtn.style.display = 'inline-block';
-            userName.textContent = `Welcome, ${user.displayName}!`;
+    // Update your auth state observer
+firebase.auth().onAuthStateChanged((user) => {
+    // Add this check at the start
+    const urlParams = new URLSearchParams(window.location.search);
+    const isPaymentSuccess = urlParams.get('redirect_status') === 'succeeded';
+
+    if (user) {
+        // User is signed in
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+        userName.textContent = `Welcome, ${user.displayName}!`;
+        
+        // Only show form if not coming from payment success
+        if (!isPaymentSuccess) {
             resumeForm.style.display = 'block';
-            window.userId = user.uid;
-            
             // Clear any previous results when logging in
             document.getElementById('result').style.display = 'none';
             document.getElementById('fullResults').style.display = 'none';
-        } else {
-            // User is signed out
-            loginBtn.style.display = 'inline-block';
-            logoutBtn.style.display = 'none';
-            userName.textContent = '';
-            resumeForm.style.display = 'none';
-            window.userId = null;
-            
-            // Clear results on logout
+        }
+        
+        window.userId = user.uid;
+    } else {
+        // User is signed out
+        loginBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'none';
+        userName.textContent = '';
+        resumeForm.style.display = 'none';
+        window.userId = null;
+        
+        // Only clear results if not coming from payment success
+        if (!isPaymentSuccess) {
             document.getElementById('result').style.display = 'none';
             document.getElementById('fullResults').style.display = 'none';
         }
-    });
+    }
+});
 
     // Sign in with Google
     loginBtn.addEventListener('click', () => {
@@ -288,23 +346,30 @@
                 
                 // Show preview points
                 const previewPoints = document.getElementById('previewPoints');
+                console.log('Matched Keywords:', data.matchingWords); // Debug log
+
                 previewPoints.innerHTML = `
-                    <li>Field: ${data.field || 'Not detected'}</li>
-                    <li>Keyword Match Score: ${data.score || 0}%</li>
+                    <li>Field: ${data.field}</li>
+                    <li>Keyword Match Score: ${data.score}%</li>
                     <li>Top Keywords Found:
-                          <ul>
-                                ${data.matchedKeywords && data.matchedKeywords.length > 0 
-                                    ? data.matchedKeywords.map(keyword => `<li>${keyword}</li>`).join('')
-                                    : '<li>No keywords found</li>'}
-            </ul>
+                        <ul style="margin-left: 20px;">
+                            ${Array.isArray(data.matchingWords) 
+                                ? data.matchingWords.map(keyword => 
+                                    `<li style="margin: 5px 0;">${keyword}</li>`).join('')
+                                : '<li>No keywords found</li>'}
+                        </ul>
                     </li>
                     <li>Areas for Improvement Available</li>
                 `;
                 console.log('Updated preview points'); // Add this
 
+                console.log('About to store resume in session storage');
+                // Store full results in session storage
+                sessionStorage.setItem('optimizedResume', data.optimizedResume);
                 // Store full results for after payment
                 window.fullResults = data.optimizedResume;
-                
+                console.log('Stored in window.fullResults:', window.fullResults); // Debug log
+
                 // Show buy button
                 buyButton.style.display = 'block';
             }
@@ -384,7 +449,9 @@ buyButton.addEventListener('click', async () => {
             } else {
                 // Payment successful - show full results
                 document.getElementById('fullResults').style.display = 'block';
-                document.getElementById('optimizedResume').innerHTML = window.fullResults;
+                document.getElementById('optimizedResume').innerHTML = window.fullResults  || 'Your optimized resume will appear here.';
+                document.getElementById('optimizedResume').style.whiteSpace = 'pre-wrap'; // Preserve formatting
+
                 paymentForm.remove();
                 payNowButton.remove();
                 buyButton.style.display = 'none';
@@ -397,6 +464,13 @@ buyButton.addEventListener('click', async () => {
     } finally {
         buyButton.disabled = false;
         buyButton.textContent = 'Unlock Full Results ($5)';
+    }
+});
+
+// Add this with your other event listeners
+window.addEventListener('message', function(event) {
+    if (event.origin === window.location.origin && event.data === 'payment_complete') {
+        showFullResults();
     }
 });
 

@@ -5,13 +5,10 @@
 </head>
 <body>
     <h1>Payment Successful!</h1>
-    <p>Your optimized resume is ready.</p>
-    <a href="/">Return to Resume Builder</a>
+    <p>Redirecting you to your optimized resume...</p>
     <script>
-        // If payment was successful, show the results
         window.onload = () => {
-            window.opener.showFullResults();  // We'll implement this function
-            window.close();
+            window.location.href = '/?redirect_status=succeeded';
         };
     </script>
 </body>

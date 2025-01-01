@@ -55,12 +55,23 @@ app.post('/analyze', async (req, res) => {
         // First detect the field
         const field = await detectField(jobDescription, resume);
 
-        // Calculate keyword match score
-        const jobWords = new Set(jobDescription.toLowerCase().match(/\b\w+\b/g));
-        const resumeWords = new Set(resume.toLowerCase().match(/\b\w+\b/g));
+        // Improved keyword matching
+        const cleanText = text => text.toLowerCase()
+            .replace(/[^\w\s]/g, ' ')  // Remove punctuation
+            .replace(/\s+/g, ' ')      // Normalize spaces
+            .trim();
+
+        const getWords = text => cleanText(text).split(' ').filter(word => word.length > 2);
+        
+        const jobWords = new Set(getWords(jobDescription));
+        const resumeWords = new Set(getWords(resume));
+        
+        // Find matching keywords
         const matchingWords = [...jobWords].filter(word => resumeWords.has(word));
         const score = Math.round((matchingWords.length / jobWords.size) * 100);
-         
+
+        console.log('Keywords found:', matchingWords); // Debug log
+
         // Optimize resume
         const optimizedResume = await optimizeResume(jobDescription, resume, field);
         
@@ -74,7 +85,7 @@ app.post('/analyze', async (req, res) => {
             field: field,
             score: score,
             matchingWords: matchingWords.slice(0, 5),
-            optimizedResume: optimizedResume
+            optimizedResume: await optimizeResume(jobDescription, resume, field)
         });
     } catch (error) {
         console.error('Error:', error);
