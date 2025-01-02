@@ -205,40 +205,71 @@
 
         const stripe = Stripe('pk_test_51Qbz0xA4w79MCEbrndfTRU1kGUSlu8haJi1xQrSyhErR43l3P12ql31w4qnrOyibYvc9vYwmTi5NgVz8mcbxJ5P700ttLuIYuA');  // Use your test publishable key
 
+
         window.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const redirectStatus = urlParams.get('redirect_status');
-    console.log('Redirect status:', redirectStatus);
     
     if (redirectStatus === 'succeeded') {
         const storedResume = sessionStorage.getItem('optimizedResume');
-        console.log('Retrieved from session storage:', storedResume);
         
         if (storedResume) {
-            // Make sure form is hidden and results are shown
-            document.getElementById('resumeForm').style.display = 'none';  // Hide the form
-            
+            // Hide form and show results
+            document.getElementById('resumeForm').style.display = 'none';
             const resultDiv = document.getElementById('result');
             resultDiv.style.display = 'block';
-            console.log('Result div display style:', resultDiv.style.display);
-
             const fullResultsDiv = document.getElementById('fullResults');
             fullResultsDiv.style.display = 'block';
-            console.log('Full results div display style:', fullResultsDiv.style.display);
-
             const optimizedResumeDiv = document.getElementById('optimizedResume');
             optimizedResumeDiv.innerHTML = storedResume;
             optimizedResumeDiv.style.whiteSpace = 'pre-wrap';
             
-            // Hide the preview and payment sections
+            // Hide preview and payment sections
             document.getElementById('previewSection').style.display = 'none';
             document.querySelector('.payment-section').style.display = 'none';
+
+            // Create button container
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.marginTop = '20px';
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.gap = '10px';
+            document.getElementById('fullResults').appendChild(buttonContainer);
             
-            console.log('All display properties set');
+            // Add Copy to Clipboard button
+            const copyBtn = document.createElement('button');
+            copyBtn.textContent = 'Copy to Clipboard';
+            copyBtn.className = 'payment-button';
+            buttonContainer.appendChild(copyBtn);
+
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(storedResume)
+                    .then(() => {
+                        copyBtn.textContent = 'Copied!';
+                        setTimeout(() => {
+                            copyBtn.textContent = 'Copy to Clipboard';
+                        }, 2000);
+                    });
+            });
+
+            // Add Start New Analysis button
+            const newAnalysisBtn = document.createElement('button');
+            newAnalysisBtn.textContent = 'Start New Analysis';
+            newAnalysisBtn.className = 'payment-button';
+            buttonContainer.appendChild(newAnalysisBtn);
+
+            newAnalysisBtn.addEventListener('click', () => {
+                // Show form and clear previous inputs
+                document.getElementById('resumeForm').style.display = 'block';
+                document.getElementById('result').style.display = 'none';
+                document.getElementById('fullResults').style.display = 'none';
+                document.getElementById('jobDescription').value = '';
+                document.getElementById('resume').value = '';
+                // Remove success parameter from URL
+                window.history.replaceState({}, '', '/');
+            });
         }
     }
 });
-
         // Auth elements
         const loginBtn = document.getElementById('loginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
@@ -247,9 +278,8 @@
         const buyButton = document.getElementById('buyButton');
 
         // Auth state observer
-    // Update your auth state observer
+   // Auth state observer
 firebase.auth().onAuthStateChanged((user) => {
-    // Add this check at the start
     const urlParams = new URLSearchParams(window.location.search);
     const isPaymentSuccess = urlParams.get('redirect_status') === 'succeeded';
 
@@ -259,14 +289,11 @@ firebase.auth().onAuthStateChanged((user) => {
         logoutBtn.style.display = 'inline-block';
         userName.textContent = `Welcome, ${user.displayName}!`;
         
-        // Only show form if not coming from payment success
         if (!isPaymentSuccess) {
             resumeForm.style.display = 'block';
-            // Clear any previous results when logging in
             document.getElementById('result').style.display = 'none';
             document.getElementById('fullResults').style.display = 'none';
         }
-        
         window.userId = user.uid;
     } else {
         // User is signed out
@@ -276,11 +303,13 @@ firebase.auth().onAuthStateChanged((user) => {
         resumeForm.style.display = 'none';
         window.userId = null;
         
-        // Only clear results if not coming from payment success
-        if (!isPaymentSuccess) {
-            document.getElementById('result').style.display = 'none';
-            document.getElementById('fullResults').style.display = 'none';
-        }
+        // Always hide results on logout
+        document.getElementById('result').style.display = 'none';
+        document.getElementById('fullResults').style.display = 'none';
+        // Clear URL parameters
+        window.history.replaceState({}, '', '/');
+        // Clear session storage
+        sessionStorage.removeItem('optimizedResume');
     }
 });
 
