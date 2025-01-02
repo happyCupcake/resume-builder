@@ -1,33 +1,33 @@
-##DropLet Instructions
+## DropLet Instructions
 
-1. # Update system
+1. #### Update system
 sudo apt update
 sudo apt upgrade
 
-2. # Install Node.js
+2. #### Install Node.js
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install nodejs
 
-3. # Install Nginx
+3. #### Install Nginx
 sudo apt install nginx
 
-4. # Install PM2 for running Node.js
+4. #### Install PM2 for running Node.js
 sudo npm install -g pm2
 
-5. # Get the code
+5. #### Get the code
 ssh-keygen -t ed25519 -C "deploy-key-resume-builder"
 cat ~/.ssh/id_ed25519.pub
 Add as deploy key to private repo
 git clone git@github.com:happyCupcake/resume-builder.git /var/www/resume-builder
 
-6. # Setup environment variables
+6. #### Setup environment variables
 cd /var/www/resume-builder
 nano .env
 
-7. # Install dependencies
+7. #### Install dependencies
 npm install
 
-8. # Setup nginx config
+8. #### Setup nginx config
 sudo nano /etc/nginx/sites-available/resume-builder
 
 # Add this configuration
@@ -45,14 +45,15 @@ server {
     }
 }
 
-9. # Enable the site
+9. #### Enable the site
 sudo ln -s /etc/nginx/sites-available/resume-builder /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 
-10. #Start app with PM2
+10. #### Start app with PM2
 cd /var/www/resume-builder
 pm2 start app.js --name "resume-builder"
+pm2 startup
 pm2 save
 
-
+ 
