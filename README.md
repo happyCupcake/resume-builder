@@ -76,3 +76,59 @@ pm2 startup
 pm2 save
 ```
 ```
+
+11. Enable SSL
+```
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d resumebuilder.store -d www.resumebuilder.store
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+12. Enable PosgresSQL
+```
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl status postgresql
+# Switch to postgres user
+sudo -u postgres psql
+
+# Create database and user
+CREATE DATABASE resumebuilder;
+CREATE USER resumeuser WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE resumebuilder TO resumeuser;
+
+# Connect to the database
+\c resumebuilder
+-- Users table (extends Firebase auth data)
+CREATE TABLE users (
+    user_id VARCHAR(128) PRIMARY KEY,  -- Firebase UID
+    email VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Analysis table
+CREATE TABLE analyses (
+    analysis_id SERIAL PRIMARY KEY,
+    user_id VARCHAR(128) REFERENCES users(user_id),
+    job_description TEXT NOT NULL,
+    original_resume TEXT NOT NULL,
+    optimized_resume TEXT,
+    field VARCHAR(50),
+    score INTEGER,
+    matching_keywords TEXT[],
+    status VARCHAR(20) DEFAULT 'preview',  -- 'preview' or 'paid'
+    payment_id VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- List databases
+\l
+
+-- List tables (after connecting to resumebuilder)
+\dt
+
+13. Integrate with postgress NodeJs app
+```
+npm install pg
+
