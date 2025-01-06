@@ -99,6 +99,7 @@ CREATE USER resumeuser WITH PASSWORD 'your_password';
 GRANT ALL PRIVILEGES ON DATABASE resumebuilder TO resumeuser;
 
 # Connect to the database
+```
 \c resumebuilder
 -- Users table (extends Firebase auth data)
 CREATE TABLE users (
@@ -127,8 +128,25 @@ CREATE TABLE analyses (
 
 -- List tables (after connecting to resumebuilder)
 \dt
+```
 
 13. Integrate with postgress NodeJs app
 ```
 npm install pg
 
+14. Debugging SQL
+```
+SELECT * FROM users;
+
+SELECT 
+    analysis_id,
+    user_id,
+    field,
+    score,
+    status,
+    payment_id,
+    created_at 
+FROM analyses 
+ORDER BY created_at DESC 
+LIMIT 5;
+```
