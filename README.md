@@ -133,6 +133,7 @@ CREATE TABLE analyses (
 13. Integrate with postgress NodeJs app
 ```
 npm install pg
+```
 
 14. Debugging SQL
 ```
@@ -149,4 +150,17 @@ SELECT
 FROM analyses 
 ORDER BY created_at DESC 
 LIMIT 5;
+
+ALTER USER resumeuser WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE resumebuilder TO resumeuser;
+-- to list users
+\du
+```
+
+15. Debugging nodejs
+```
+pm2 logs resume-builder --lines 1000
+pm2 restart resume-builder
+# when pulling new code make sure you npm install bring all dependencies
+npm install
 ```
