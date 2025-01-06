@@ -18,6 +18,7 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: visible;
         }
         .form-group {
             margin-bottom: 20px;
@@ -206,22 +207,73 @@
         const stripe = Stripe('pk_test_51Qbz0xA4w79MCEbrndfTRU1kGUSlu8haJi1xQrSyhErR43l3P12ql31w4qnrOyibYvc9vYwmTi5NgVz8mcbxJ5P700ttLuIYuA');  // Use your test publishable key
 
 
-        window.addEventListener('DOMContentLoaded', () => {
+
+        window.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const redirectStatus = urlParams.get('redirect_status');
-    
-    if (redirectStatus === 'succeeded') {
-        const storedResume = sessionStorage.getItem('optimizedResume');
+    const analysisId = sessionStorage.getItem('currentAnalysisId');
+
+    console.log('DOMContentLoaded check:', { redirectStatus, analysisId });
+
+    if (redirectStatus === 'succeeded' && analysisId) {
+        console.log('Payment success detected');
+        // Hide form and show results container
+        document.getElementById('resumeForm').style.display = 'none';
+        document.getElementById('result').style.display = 'block';
         
-        if (storedResume) {
-            // Hide form and show results
-            document.getElementById('resumeForm').style.display = 'none';
-            const resultDiv = document.getElementById('result');
-            resultDiv.style.display = 'block';
+        console.log('Payment section state before update:', {
+            exists: !!document.querySelector('.payment-section'),
+            html: document.querySelector('.payment-section')?.innerHTML
+        });
+
+        // First update payment status
+        try {
+            const paymentUpdateResponse = await fetch('/update-payment-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    analysisId: analysisId,
+                    paymentId: urlParams.get('payment_intent')
+                })
+            });
+
+            if (paymentUpdateResponse.ok) {
+                console.log('Payment status updated successfully');
+                // Only fetch results once after payment is updated
+                fetchPaidResults(analysisId);
+            } else {
+                console.error('Failed to update payment status');
+            }
+        } catch (error) {
+            console.error('Error updating payment status:', error);
+        }
+
+        // Log final state
+        console.log('Payment section final state:', {
+            exists: !!document.querySelector('.payment-section'),
+            html: document.querySelector('.payment-section')?.innerHTML
+        });
+    }
+});
+
+async function fetchPaidResults(analysisId) {
+    try {
+        const response = await fetch('/get-full-results', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ analysisId })
+        });
+
+        const data = await response.json();
+        if (data.success) {
             const fullResultsDiv = document.getElementById('fullResults');
             fullResultsDiv.style.display = 'block';
             const optimizedResumeDiv = document.getElementById('optimizedResume');
-            optimizedResumeDiv.innerHTML = storedResume;
+            optimizedResumeDiv.innerHTML = data.optimizedResume;
             optimizedResumeDiv.style.whiteSpace = 'pre-wrap';
             
             // Hide preview and payment sections
@@ -242,7 +294,7 @@
             buttonContainer.appendChild(copyBtn);
 
             copyBtn.addEventListener('click', () => {
-                navigator.clipboard.writeText(storedResume)
+                navigator.clipboard.writeText(data.optimizedResume)
                     .then(() => {
                         copyBtn.textContent = 'Copied!';
                         setTimeout(() => {
@@ -267,9 +319,16 @@
                 // Remove success parameter from URL
                 window.history.replaceState({}, '', '/');
             });
+
+            // Clear stored analysis ID
+            sessionStorage.removeItem('currentAnalysisId');
         }
+    } catch (error) {
+        console.error('Error fetching results:', error);
+        alert('Error retrieving your results. Please contact support.');
     }
-});
+}
+
         // Auth elements
         const loginBtn = document.getElementById('loginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
@@ -284,10 +343,34 @@ firebase.auth().onAuthStateChanged((user) => {
     const isPaymentSuccess = urlParams.get('redirect_status') === 'succeeded';
 
     if (user) {
+
+        console.log('User details:', user.uid, user.email);
+
         // User is signed in
         loginBtn.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
         userName.textContent = `Welcome, ${user.displayName}!`;
+
+        // Insert user into database if they don't exist
+            console.log('Attempting to upsert user...');
+            // Insert user into database
+        fetch('/upsert-user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId: user.uid,
+                email: user.email
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            console.log('Upsert response:', result);
+        })
+        .catch(error => {
+            console.error('Error upserting user:', error);
+        });
         
         if (!isPaymentSuccess) {
             resumeForm.style.display = 'block';
@@ -324,94 +407,446 @@ firebase.auth().onAuthStateChanged((user) => {
         firebase.auth().signOut();
     });
 
-    // Add this function to handle showing results
-    function showFullResults() {
-        document.getElementById('fullResults').style.display = 'block';
-        document.getElementById('optimizedResume').innerHTML = window.fullResults;
-        document.querySelector('.payment-section').style.display = 'none';
-}
+    // Payment section state management
+const PaymentSection = {
+    init() {
+        this.section = document.querySelector('.payment-section');
+        this.initializeBuyButton();
+    },
 
-
-    // Form submission handler
-    resumeForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    initializeBuyButton() {
+        // Clear existing content
+        this.section.innerHTML = `
+            <button id="buyButton" class="payment-button">
+                Unlock Full Results ($5)
+            </button>
+        `;
         
+        const buyButton = document.getElementById('buyButton');
+        buyButton.style.display = 'block';
+        
+        // Attach event listener
+        buyButton.addEventListener('click', this.handleBuyButtonClick.bind(this));
+        
+        console.log('Buy button initialized:', {
+            element: buyButton,
+            display: buyButton.style.display,
+            visibility: window.getComputedStyle(buyButton).visibility,
+            parentDisplay: window.getComputedStyle(this.section).display
+        });
+    },
+
+    async handleBuyButtonClick(event) {
+        const button = event.target;
         if (!window.userId) {
             alert('Please login first');
             return;
         }
 
         try {
-            const jobDescription = document.getElementById('jobDescription').value;
-            const resume = document.getElementById('resume').value;
-            
-            // Show loading state if you have one
-            // loadingSpinner.style.display = 'block';
-            resumeForm.querySelector('button').disabled = true;
+            button.disabled = true;
+            button.textContent = 'Processing...';
 
-            const response = await fetch('/analyze', {
+            const analysisId = sessionStorage.getItem('currentAnalysisId');
+            console.log('Creating payment intent for analysis:', analysisId);
+
+            const response = await fetch('/create-payment-intent', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ 
-                    jobDescription, 
-                    resume,
-                    userId: window.userId 
+                body: JSON.stringify({
+                    userId: window.userId,
+                    analysisId: analysisId
                 })
             });
+
+            const { clientSecret } = await response.json();
+            await this.showPaymentForm(clientSecret);
             
-            const data = await response.json();
-            console.log('Received data:', data);  // Add this
+        } catch (error) {
+            console.error('Payment Error:', error);
+            alert('Payment failed: ' + error.message);
+            this.resetBuyButton(button);
+        }
+    },
+
+    async showPaymentForm(clientSecret) {
+        const appearance = {
+            theme: 'stripe',
+            variables: {
+                colorPrimary: '#5469d4',
+            }
+        };
+
+        // Create Stripe elements
+        const elements = stripe.elements({ appearance, clientSecret });
+        const paymentElement = elements.create('payment');
+
+        // Setup payment form
+        this.section.innerHTML = `
+            <div id="payment-form"></div>
+            <button class="payment-button" id="payNowButton" style="margin-top: 20px;">
+                Pay Now
+            </button>
+        `;
+
+        // Mount payment element
+        paymentElement.mount('#payment-form');
+
+        // Setup pay now button
+        const payNowButton = document.getElementById('payNowButton');
+        payNowButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+            payNowButton.disabled = true;
+            payNowButton.textContent = 'Processing...';
+
+            const { error } = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    return_url: `${window.location.origin}/payment-complete`,
+                }
+            });
+
+            if (error) {
+                payNowButton.disabled = false;
+                payNowButton.textContent = 'Pay Now';
+                alert(error.message);
+                // Reset to buy button if payment fails
+                this.initializeBuyButton();
+            }
+        });
+    },
+
+    resetBuyButton(button) {
+        button.disabled = false;
+        button.textContent = 'Unlock Full Results ($5)';
+    },
+
+    // Call this after successful analysis
+    reset() {
+        this.initializeBuyButton();
+        this.section.style.display = 'block';
+    }
+};
+
+// Initialize payment section
+document.addEventListener('DOMContentLoaded', () => {
+    PaymentSection.init();
+});
+
+// Modify your form submit handler
+resumeForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (!window.userId) {
+        alert('Please login first');
+        return;
+    }
+
+    try {
+        const jobDescription = document.getElementById('jobDescription').value;
+        const resume = document.getElementById('resume').value;
+
+        if (!jobDescription.trim() || !resume.trim()) {
+            alert('Please provide both job description and resume');
+            return;
+        }
+
+        const submitButton = e.target.querySelector('button');
+        submitButton.disabled = true;
+
+        const response = await fetch('/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                jobDescription, 
+                resume,
+                userId: window.userId
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            sessionStorage.setItem('currentAnalysisId', data.analysisId);
             
-            if (data.success) {
-                // Show results section
-                document.getElementById('result').style.display = 'block';
+            // Show results
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            
+            // Update preview content
+            document.getElementById('fieldResult').innerHTML = `
+                <p><strong>Detected Field:</strong> ${data.field}</p>
+            `;
+            
+            document.getElementById('previewPoints').innerHTML = `
+                <li>Field: ${data.field}</li>
+                <li>Keyword Match Score: ${data.score}%</li>
+                <li>Top Keywords Found:
+                    <ul>
+                        ${data.matchingWords.map(keyword => `<li>${keyword}</li>`).join('')}
+                    </ul>
+                </li>
+                <li>Areas for Improvement Available</li>
+            `;
+
+            // Reset payment section
+            PaymentSection.reset();
+            
+            console.log('Analysis complete, payment section reset');
+        } else {
+            alert('Analysis failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred during analysis');
+    } finally {
+        e.target.querySelector('button').disabled = false;
+    }
+});
+
+
+
+    resumeForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    console.log('Starting new analysis, payment section state:', {
+        exists: !!document.querySelector('.payment-section'),
+        html: document.querySelector('.payment-section')?.innerHTML,
+        parent: document.querySelector('.payment-section')?.parentElement?.innerHTML
+    });
+    
+    if (!window.userId) {
+        alert('Please login first');
+        return;
+    }
+
+    try {
+        const jobDescription = document.getElementById('jobDescription').value;
+        const resume = document.getElementById('resume').value;
+
+        // Validate inputs
+        if (!jobDescription.trim() || !resume.trim()) {
+            alert('Please provide both job description and resume');
+            return;
+        }
+        
+        // Show loading state
+        resumeForm.querySelector('button').disabled = true;
+
+        const response = await fetch('/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                jobDescription, 
+                resume,
+                userId: window.userId
+            })
+        });
+        
+        const data = await response.json();
+        console.log('Received analysis response:', data);
+
+        if (data.success) {
+            console.log('Starting UI update');
+            
+            try {
+                // Store analysis ID for after payment
+                sessionStorage.setItem('currentAnalysisId', data.analysisId);
                 
-                // Update field detection
-                document.getElementById('fieldResult').innerHTML = `
+                // Get UI elements and ensure they exist
+                const resultDiv = document.getElementById('result');
+                const fieldResultDiv = document.getElementById('fieldResult');
+                const previewPointsDiv = document.getElementById('previewPoints');
+                
+                if (!resultDiv || !fieldResultDiv || !previewPointsDiv) {
+                    throw new Error('Required UI elements not found');
+                }
+
+                console.log('Before visibility update:', {
+                    resultDisplay: resultDiv.style.display,
+                    computed: window.getComputedStyle(resultDiv).display
+                });
+
+                // Force display block
+                resultDiv.setAttribute('style', 'display: block !important');
+                
+                console.log('After visibility update:', {
+                    resultDisplay: resultDiv.style.display,
+                    computed: window.getComputedStyle(resultDiv).display
+                });
+                // Add preview section check here
+                const previewSection = document.getElementById('previewSection');
+                if (previewSection) {
+                    previewSection.style.display = 'block';
+                    console.log('Preview section visibility:', window.getComputedStyle(previewSection).display);
+                }
+
+                // After showing the preview content
+                const computedStyle = window.getComputedStyle(buyButton);
+
+                buyButton.style.display = 'block';
+                console.log('Buy button visibility:', {
+                    style: buyButton.style.display,
+                    computed: computedStyle.display,
+                    visibility: computedStyle.visibility,
+                    opacity: computedStyle.opacity
+                });
+
+                // Update content
+                fieldResultDiv.innerHTML = `
                     <p><strong>Detected Field:</strong> ${data.field}</p>
                 `;
+                console.log('Field div content:', fieldResultDiv.innerHTML);
                 
-                // Show preview points
-                const previewPoints = document.getElementById('previewPoints');
-                console.log('Matched Keywords:', data.matchingWords); // Debug log
-
-                previewPoints.innerHTML = `
+                previewPointsDiv.innerHTML = `
                     <li>Field: ${data.field}</li>
                     <li>Keyword Match Score: ${data.score}%</li>
                     <li>Top Keywords Found:
-                        <ul style="margin-left: 20px;">
-                            ${Array.isArray(data.matchingWords) 
-                                ? data.matchingWords.map(keyword => 
-                                    `<li style="margin: 5px 0;">${keyword}</li>`).join('')
-                                : '<li>No keywords found</li>'}
+                        <ul>
+                            ${data.matchingWords.map(keyword => `<li>${keyword}</li>`).join('')}
                         </ul>
                     </li>
                     <li>Areas for Improvement Available</li>
                 `;
-                console.log('Updated preview points'); // Add this
+                console.log('Preview points content:', previewPointsDiv.innerHTML);
+                // Check parent elements' visibility
+                console.log('Parent visibility:', {
+                    resultParent: resultDiv.parentElement?.style.display,
+                    fieldResultParent: fieldResultDiv.parentElement?.style.display,
+                    previewPointsParent: previewPointsDiv.parentElement?.style.display
+                });
 
-                console.log('About to store resume in session storage');
-                // Store full results in session storage
-                sessionStorage.setItem('optimizedResume', data.optimizedResume);
-                // Store full results for after payment
-                window.fullResults = data.optimizedResume;
-                console.log('Stored in window.fullResults:', window.fullResults); // Debug log
+                // Add this before trying to modify payment section
+                console.log('Payment section before:', {
+                    exists: !!document.querySelector('.payment-section'),
+                    html: document.querySelector('.payment-section')?.innerHTML
+                });
 
-                // Show buy button
-                buyButton.style.display = 'block';
+                // Add the new code here
+                // First, clear existing payment section
+                const paymentSection = document.querySelector('.payment-section');
+                if (paymentSection) {
+                    paymentSection.innerHTML = `
+                        <button id="buyButton" class="payment-button">
+                            Unlock Full Results ($5)
+                        </button>
+                    `;
+                    
+                    // Get the new button and reattach event listener
+                    const newBuyButton = document.getElementById('buyButton');
+                    newBuyButton.style.display = 'block';
+                    
+                    // Re-attach the click event listener
+                    newBuyButton.addEventListener('click', async () => {
+                        if (!window.userId) {
+                            alert('Please login first');
+                            return;
+                        }
+
+                        try {
+                            newBuyButton.disabled = true;
+                            newBuyButton.textContent = 'Processing...';
+
+                            // Rest of your payment handling code
+                            const response = await fetch('/create-payment-intent', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    userId: window.userId,
+                                    analysisId: sessionStorage.getItem('currentAnalysisId')
+                                })
+                            });
+
+                            const { clientSecret } = await response.json();
+
+                            const appearance = {
+                                theme: 'stripe',
+                                variables: {
+                                    colorPrimary: '#5469d4',
+                                }
+                            };
+
+                            elements = stripe.elements({ appearance, clientSecret });
+                            const paymentElement = elements.create('payment');
+                            
+                            // Add payment form to the page
+                            const paymentForm = document.createElement('div');
+                            paymentForm.id = 'payment-form';
+                            paymentSection.appendChild(paymentForm);
+                            paymentElement.mount('#payment-form');
+
+                            // Add pay now button
+                            const payNowButton = document.createElement('button');
+                            payNowButton.textContent = 'Pay Now';
+                            payNowButton.className = 'payment-button';
+                            payNowButton.style.marginTop = '20px';
+                            paymentSection.appendChild(payNowButton);
+
+                            // Handle payment submission
+                            payNowButton.addEventListener('click', async (e) => {
+                                e.preventDefault();
+                                payNowButton.disabled = true;
+                                payNowButton.textContent = 'Processing...';
+
+                                const { error } = await stripe.confirmPayment({
+                                    elements,
+                                    confirmParams: {
+                                        return_url: `${window.location.origin}/payment-complete`,
+                                    }
+                                });
+
+                                if (error) {
+                                    payNowButton.disabled = false;
+                                    payNowButton.textContent = 'Pay Now';
+                                    alert(error.message);
+                                } else {
+                                    // After successful payment, let's not remove the payment section
+                                    // Just hide it
+                                    document.querySelector('.payment-section').style.display = 'none';
+                                    // Instead of removing it completely
+                                }
+                            });
+
+                        } catch (error) {
+                            console.error('Payment Error:', error);
+                            alert('Payment failed: ' + error.message);
+                        } finally {
+                            newBuyButton.disabled = false;
+                            newBuyButton.textContent = 'Unlock Full Results ($5)';
+                        }
+                    });
+                    
+                    console.log('Buy button recreated:', {
+                        exists: !!newBuyButton,
+                        style: newBuyButton.style.display,
+                        computed: window.getComputedStyle(newBuyButton).display
+                    });
+                }
+
+                console.log('UI update completed');
+            } catch (uiError) {
+                console.error('Error updating UI:', uiError);
+                alert('Error displaying results. Please refresh and try again.');
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('An error occurred during analysis');
-        } finally {
-            // Hide loading state
-            resumeForm.querySelector('button').disabled = false;
+        } else {
+            alert('Analysis failed. Please try again.');
         }
-    });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred during analysis');
+    } finally {
+        resumeForm.querySelector('button').disabled = false;
+    }
+});
 
-   // Replace the existing buyButton click handler with this:
 buyButton.addEventListener('click', async () => {
     if (!window.userId) {
         alert('Please login first');
@@ -429,7 +864,8 @@ buyButton.addEventListener('click', async () => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                userId: window.userId
+                userId: window.userId,
+                analysisId: sessionStorage.getItem('currentAnalysisId')
             })
         });
 
@@ -475,15 +911,6 @@ buyButton.addEventListener('click', async () => {
                 payNowButton.disabled = false;
                 payNowButton.textContent = 'Pay Now';
                 alert(error.message);
-            } else {
-                // Payment successful - show full results
-                document.getElementById('fullResults').style.display = 'block';
-                document.getElementById('optimizedResume').innerHTML = window.fullResults  || 'Your optimized resume will appear here.';
-                document.getElementById('optimizedResume').style.whiteSpace = 'pre-wrap'; // Preserve formatting
-
-                paymentForm.remove();
-                payNowButton.remove();
-                buyButton.style.display = 'none';
             }
         });
 
@@ -495,14 +922,6 @@ buyButton.addEventListener('click', async () => {
         buyButton.textContent = 'Unlock Full Results ($5)';
     }
 });
-
-// Add this with your other event listeners
-window.addEventListener('message', function(event) {
-    if (event.origin === window.location.origin && event.data === 'payment_complete') {
-        showFullResults();
-    }
-});
-
 
     </script>
 </body>
