@@ -135,7 +135,7 @@ app.post('/create-payment-intent', async (req, res) => {
         const { userId, analysisId } = req.body;  // Get analysisId too
 
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: 500, // $5.00
+            amount: 50, // $0.50
             currency: 'usd',
             metadata: {
                 userId: userId,
