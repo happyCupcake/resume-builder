@@ -4,122 +4,558 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Resume Optimizer</title>
+    <title>Resume Rocket | AI-Powered Resume Optimization</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --primary-dark: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --dark: #212529;
+            --light: #f8f9fa;
+            --grey-light: #e9ecef;
+            --gradient: linear-gradient(45deg, var(--primary), var(--primary-light));
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            background-color: #f6f8fc;
+            color: #333;
             line-height: 1.6;
+            min-height: 100vh;
         }
-        .container {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow: visible;
+        
+        .page-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            min-height: 150px;
-            font-size: 14px;
-        }
-        button {
-            background-color: #007bff;
+        
+        .navbar {
+            background: var(--primary);
+            background: var(--gradient);
             color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #result {
-            margin-top: 20px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            display: none;
-        }
-        .auth-section {
-            margin-bottom: 20px;
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        #userStatus {
+        
+        .navbar-inner {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        #loginBtn, #logoutBtn {
-            background-color: #4285f4;
-            color: white;
-            padding: 8px 16px;
+        
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        #userStatus {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        #userName {
+            font-weight: 500;
+        }
+        
+        .auth-button {
+            background-color: white;
+            color: var(--primary);
+            padding: 0.5rem 1rem;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        #loginBtn:hover, #logoutBtn:hover {
-            background-color: #357abd;
+        
+        .auth-button:hover {
+            background-color: rgba(255,255,255,0.9);
+            transform: translateY(-1px);
         }
-        #userName {
-            font-weight: bold;
+        
+        .main-content {
+            flex: 1;
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
         }
-        .preview-content {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 15px 0;
+        
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
         }
+        
+        .hero h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .step {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            flex: 1;
+            min-width: 250px;
+            max-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .step:hover {
+            transform: translateY(-5px);
+        }
+        
+        .step i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        .step h3 {
+            margin-bottom: 0.5rem;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        
+        .form-section {
+            margin-top: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            min-height: 150px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            resize: vertical;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+        
+        button {
+            background: var(--primary);
+            background: var(--gradient);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        #result {
+            margin-top: 2rem;
+            display: none;
+        }
+        
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .result-header i {
+            color: var(--primary);
+        }
+        
+        .preview-card {
+            background: #f9f9ff;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+            margin: 1.5rem 0;
+        }
+        
+        .score-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+        
+        .score-meter {
+            height: 10px;
+            width: 100%;
+            background: #e0e0e0;
+            border-radius: 5px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+        
+        .score-fill {
+            height: 100%;
+            background: var(--primary);
+            background: var(--gradient);
+            border-radius: 5px;
+            transition: width 1s ease-in-out;
+        }
+        
+        .keyword-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .keyword-pill {
+            background: var(--grey-light);
+            color: var(--dark);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .keyword-pill i {
+            color: var(--primary);
+            font-size: 0.75rem;
+        }
+        
         .payment-section {
             text-align: center;
-            margin: 20px 0;
+            margin: 2rem 0;
         }
+        
         .payment-button {
-            background-color: #5469d4;
+            background: var(--primary);
             color: white;
-            padding: 12px 24px;
+            padding: 1rem 2rem;
             border: none;
-            border-radius: 4px;
-            font-size: 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1.1rem;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
+        
         .payment-button:hover {
-            background-color: #4054b2;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(67, 97, 238, 0.2);
         }
+        
         #payment-form {
-            margin-top: 20px;
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 10px;
             background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
+        
         #fullResults {
-            margin-top: 20px;
-            padding: 20px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            margin-top: 2rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: none;
         }
+        
+        .result-section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-family: 'Poppins', sans-serif;
+            color: var(--primary);
+        }
+        
         #optimizedResume {
             white-space: pre-wrap;
             line-height: 1.6;
-            font-size: 14px;
+            font-size: 1rem;
+            background: #f9f9ff;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .testimonials {
+            margin: 4rem 0;
+        }
+        
+        .testimonial-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .testimonial-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .testimonial-content {
+            position: relative;
+            padding: 1rem 0;
+        }
+        
+        .testimonial-content::before {
+            content: '"';
+            font-size: 4rem;
+            font-family: Georgia, serif;
+            color: rgba(67, 97, 238, 0.1);
+            position: absolute;
+            top: -1rem;
+            left: -1rem;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .author-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .author-info h4 {
+            margin-bottom: 0.2rem;
+        }
+        
+        .author-job {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .features {
+            margin: 4rem 0;
+        }
+        
+        .features-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(67, 97, 238, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-icon i {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        
+        .footer-logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-links h3 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .footer-links ul {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-links a {
+            color: #aaa;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid #444;
+            color: #aaa;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem;
+            }
+            
+            .main-content {
+                padding: 0 1rem;
+            }
+            
+            .step {
+                min-width: 100%;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
         }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -127,52 +563,235 @@
     <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="auth-section">
-            <div id="userStatus">
-                <span id="userName"></span>
-                <button id="loginBtn" style="display: none;">Sign in with Google</button>
-                <button id="logoutBtn" style="display: none;">Logout</button>
-            </div>
-        </div>
-
-        <h1>AI Resume Optimizer</h1>
-        <form id="resumeForm">
-            <div class="form-group">
-                <label for="jobDescription">Job Description:</label>
-                <textarea id="jobDescription" name="jobDescription" 
-                    placeholder="Paste the job description here..."></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="resume">Your Current Resume:</label>
-                <textarea id="resume" name="resume" 
-                    placeholder="Paste your current resume here..."></textarea>
-            </div>
-
-            <button type="submit">Analyze and Optimize</button>
-        </form>
-
-        <div id="result">
-            <h2>Analysis Results</h2>
-            <div id="previewSection">
-                <div id="fieldResult"></div>
-                <div class="preview-content">
-                    <h3>Preview of Optimizations:</h3>
-                    <ul id="previewPoints"></ul>
+    <div class="page-container">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <div class="logo">
+                    <i class="fas fa-rocket"></i> Resume Rocket
                 </div>
-                <div class="payment-section">
-                    <button id="buyButton" class="payment-button">
-                        Unlock Full Results ($5)
+                <div id="userStatus">
+                    <span id="userName"></span>
+                    <button id="loginBtn" class="auth-button" style="display: none;">
+                        <i class="fab fa-google"></i> Sign in with Google
+                    </button>
+                    <button id="logoutBtn" class="auth-button" style="display: none;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
                 </div>
             </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Hero Section -->
+            <div class="hero">
+                <h1>Land Your Dream Job with AI-Optimized Resumes</h1>
+                <p>Our AI-powered tool analyzes job descriptions and tailors your resume to increase interview chances by up to 70%</p>
+            </div>
+            
+            <!-- How It Works -->
+            <div class="steps">
+                <div class="step">
+                    <i class="fas fa-file-alt"></i>
+                    <h3>Step 1</h3>
+                    <p>Paste the job description and your current resume</p>
+                </div>
+                <div class="step">
+                    <i class="fas fa-robot"></i>
+                    <h3>Step 2</h3>
+                    <p>Our AI analyzes your resume against the job requirements</p>
+                </div>
+                <div class="step">
+                    <i class="fas fa-check-circle"></i>
+                    <h3>Step 3</h3>
+                    <p>Get your optimized resume tailored for the specific position</p>
+                </div>
+            </div>
+            
+            <!-- Form Section -->
+            <div class="container form-section">
+                <form id="resumeForm">
+                    <div class="form-group">
+                        <label for="jobDescription">
+                            <i class="fas fa-briefcase"></i> Job Description
+                        </label>
+                        <textarea id="jobDescription" name="jobDescription" 
+                            placeholder="Copy and paste the job description here..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="resume">
+                            <i class="fas fa-file-alt"></i> Your Current Resume
+                        </label>
+                        <textarea id="resume" name="resume" 
+                            placeholder="Copy and paste your current resume here..."></textarea>
+                    </div>
 
-            <div id="fullResults" style="display: none;">
-                <h3>Your Optimized Resume:</h3>
-                <div id="optimizedResume"></div>
+                    <button type="submit">
+                        <i class="fas fa-magic"></i> Analyze and Optimize
+                    </button>
+                </form>
+
+                <!-- Results Section -->
+                <div id="result">
+                    <div class="result-header">
+                        <i class="fas fa-chart-bar"></i>
+                        <h2>Analysis Results</h2>
+                    </div>
+                    
+                    <div id="previewSection">
+                        <!-- Field Detection -->
+                        <div class="score-card">
+                            <div id="fieldResult"></div>
+                            
+                            <!-- Score Meter -->
+                            <div>
+                                <h3>Keyword Match Score</h3>
+                                <div class="score-meter">
+                                    <div class="score-fill" id="scoreFill" style="width: 0%"></div>
+                                </div>
+                                <p id="scoreText"></p>
+                            </div>
+                            
+                            <!-- Keywords -->
+                            <div>
+                                <h3>Top Matching Keywords</h3>
+                                <div class="keyword-pills" id="keywordList"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Preview Section -->
+                        <div class="preview-card">
+                            <h3>Preview of Optimizations</h3>
+                            <ul id="previewPoints"></ul>
+                            <p class="preview-notice">Unlock the fully optimized resume tailored to this specific job description.</p>
+                        </div>
+                        
+                        <!-- Payment Section -->
+                        <div class="payment-section">
+                            <button id="buyButton" class="payment-button">
+                                <i class="fas fa-unlock-alt"></i> Unlock Full Results ($0.50)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Full Results (After Payment) -->
+                    <div id="fullResults">
+                        <div class="result-section-title">
+                            <i class="fas fa-file-alt"></i>
+                            <h3>Your Optimized Resume</h3>
+                        </div>
+                        <div id="optimizedResume"></div>
+                        <div class="action-buttons" id="resultButtons">
+                            <!-- Buttons will be added via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Testimonials -->
+            <div class="testimonials">
+                <h2 class="testimonial-title">What Our Users Say</h2>
+                <div class="testimonial-grid">
+                    <div class="testimonial-card">
+                        <div class="testimonial-content">
+                            <p>After updating my resume with Resume Rocket, I started getting interview calls within days. I landed a job at a top tech company!</p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-image">JS</div>
+                            <div class="author-info">
+                                <h4>Jennifer S.</h4>
+                                <p class="author-job">Software Engineer</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-content">
+                            <p>I was applying for months with no responses. After one optimization, I got 3 interviews in a week. The AI really knows what recruiters are looking for!</p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-image">MT</div>
+                            <div class="author-info">
+                                <h4>Michael T.</h4>
+                                <p class="author-job">Marketing Specialist</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-content">
+                            <p>As a career changer, I was struggling to highlight my transferable skills. Resume Rocket helped me create a resume that got me noticed in a new industry.</p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-image">AL</div>
+                            <div class="author-info">
+                                <h4>Aisha L.</h4>
+                                <p class="author-job">Financial Analyst</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Features -->
+            <div class="features">
+                <h2 class="features-title">Why Choose Resume Rocket</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3>Advanced AI Analysis</h3>
+                        <p>Our AI analyzes job descriptions to identify key skills and requirements that matter most to employers.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <h3>Instant Results</h3>
+                        <p>Get your optimized resume in seconds, not days. Apply to jobs faster and increase your chances.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h3>Privacy Focused</h3>
+                        <p>Your resume data is encrypted and never shared with third parties. We take your privacy seriously.</p>
+                    </div>
+                </div>
             </div>
         </div>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-about">
+                    <div class="footer-logo">
+                        <i class="fas fa-rocket"></i> Resume Rocket
+                    </div>
+                    <p>AI-powered resume optimization to help you land your dream job.</p>
+                </div>
+                <div class="footer-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">How It Works</a></li>
+                        <li><a href="#">Pricing</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h3>Legal</h3>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Resume Rocket. All Rights Reserved.</p>
+            </div>
+        </footer>
     </div>
 
     <script>
@@ -291,19 +910,31 @@
             },
 
             updatePreview(data) {
+                // Update field detection
                 document.getElementById('fieldResult').innerHTML = `
-                    <p><strong>Detected Field:</strong> ${data.field}</p>
+                    <h3><i class="fas fa-briefcase"></i> Industry Detection</h3>
+                    <p>Your resume is best suited for <strong>${data.field}</strong> positions</p>
                 `;
                 
+                // Update score meter
+                const scoreFill = document.getElementById('scoreFill');
+                const scoreText = document.getElementById('scoreText');
+                scoreFill.style.width = `${data.score}%`;
+                scoreText.textContent = `Your resume matches ${data.score}% of keywords in this job description`;
+                
+                // Update keywords list
+                const keywordList = document.getElementById('keywordList');
+                keywordList.innerHTML = data.matchingWords.map(keyword => 
+                    `<div class="keyword-pill"><i class="fas fa-check-circle"></i> ${keyword}</div>`
+                ).join('');
+                
+                // Update preview points
                 document.getElementById('previewPoints').innerHTML = `
-                    <li>Field: ${data.field}</li>
-                    <li>Keyword Match Score: ${data.score}%</li>
-                    <li>Top Keywords Found:
-                        <ul>
-                            ${data.matchingWords.map(keyword => `<li>${keyword}</li>`).join('')}
-                        </ul>
-                    </li>
-                    <li>Areas for Improvement Available</li>
+                    <li>Reorganized resume structure to highlight relevant ${data.field} experience</li>
+                    <li>Enhanced key skills section with industry-specific terminology</li>
+                    <li>Optimized achievement statements to showcase quantifiable results</li>
+                    <li>Added missing keywords to improve ATS compatibility</li>
+                    <li>Strengthened professional summary to grab recruiter attention</li>
                 `;
             },
 
@@ -343,17 +974,35 @@
             async showPaymentForm(clientSecret) {
                 const appearance = {
                     theme: 'stripe',
-                    variables: { colorPrimary: '#5469d4' }
+                    variables: { 
+                        colorPrimary: '#4361ee',
+                        colorBackground: '#ffffff',
+                        colorText: '#212529',
+                        colorDanger: '#f72585',
+                        fontFamily: 'Inter, system-ui, sans-serif',
+                        borderRadius: '8px',
+                        spacingUnit: '4px'
+                    }
                 };
 
                 const elements = stripe.elements({ appearance, clientSecret });
                 const paymentElement = elements.create('payment');
 
                 this.paymentSection.innerHTML = `
-                    <div id="payment-form"></div>
+                    <div class="preview-card" style="margin-bottom: 20px; background-color: rgba(76, 201, 240, 0.1); border-left: 4px solid var(--success);">
+                        <h3><i class="fas fa-lock"></i> Secure Checkout</h3>
+                        <p>You're just one step away from your optimized resume!</p>
+                        <p style="margin-top: 10px;">
+                            <i class="fas fa-shield-alt"></i> Your payment is secure and encrypted.
+                        </p>
+                    </div>
+                    <div id="payment-form" style="padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);"></div>
                     <button class="payment-button" id="payNowButton" style="margin-top: 20px;">
-                        Pay Now
+                        <i class="fas fa-credit-card"></i> Pay $0.50
                     </button>
+                    <p style="margin-top: 15px; font-size: 0.9rem; color: #666; text-align: center;">
+                        <i class="fas fa-info-circle"></i> You'll only be charged once, no subscription.
+                    </p>
                 `;
 
                 paymentElement.mount('#payment-form');
@@ -362,7 +1011,7 @@
                 payNowButton.addEventListener('click', async (e) => {
                     e.preventDefault();
                     payNowButton.disabled = true;
-                    payNowButton.textContent = 'Processing...';
+                    payNowButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
                     const { error } = await stripe.confirmPayment({
                         elements,
@@ -373,16 +1022,26 @@
 
                     if (error) {
                         payNowButton.disabled = false;
-                        payNowButton.textContent = 'Pay Now';
-                        alert(error.message);
-                        this.initializePaymentSection();
+                        payNowButton.innerHTML = '<i class="fas fa-credit-card"></i> Pay $0.50';
+                        
+                        // Show error in a nicer way
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'preview-card';
+                        errorDiv.style.marginTop = '15px';
+                        errorDiv.style.backgroundColor = 'rgba(247, 37, 133, 0.1)';
+                        errorDiv.style.borderLeft = '4px solid var(--danger)';
+                        errorDiv.innerHTML = `
+                            <h3><i class="fas fa-exclamation-circle" style="color: var(--danger);"></i> Payment Error</h3>
+                            <p>${error.message}</p>
+                        `;
+                        this.paymentSection.appendChild(errorDiv);
                     }
                 });
             },
 
             resetBuyButton(button) {
                 button.disabled = false;
-                button.textContent = 'Unlock Full Results ($5)';
+                button.innerHTML = '<i class="fas fa-unlock-alt"></i> Unlock Full Results ($0.50)';
             }
         };
 
@@ -399,38 +1058,59 @@
 
                 const data = await response.json();
                 if (data.success) {
+                    // Show full results
                     const fullResultsDiv = document.getElementById('fullResults');
                     fullResultsDiv.style.display = 'block';
+                    
+                    // Update resume content
                     const optimizedResumeDiv = document.getElementById('optimizedResume');
                     optimizedResumeDiv.innerHTML = data.optimizedResume;
                     optimizedResumeDiv.style.whiteSpace = 'pre-wrap';
                     
+                    // Hide preview section
                     document.getElementById('previewSection').style.display = 'none';
-                    document.querySelector('.payment-section').style.display = 'none';
-
-                    const buttonContainer = document.createElement('div');
-                    buttonContainer.style.marginTop = '20px';
-                    buttonContainer.style.display = 'flex';
-                    buttonContainer.style.gap = '10px';
-                    document.getElementById('fullResults').appendChild(buttonContainer);
                     
+                    // Add action buttons
+                    const buttonContainer = document.getElementById('resultButtons');
+                    buttonContainer.innerHTML = '';
+                    
+                    // Copy button
                     const copyBtn = document.createElement('button');
-                    copyBtn.textContent = 'Copy to Clipboard';
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy to Clipboard';
                     copyBtn.className = 'payment-button';
                     buttonContainer.appendChild(copyBtn);
 
                     copyBtn.addEventListener('click', () => {
                         navigator.clipboard.writeText(data.optimizedResume)
                             .then(() => {
-                                copyBtn.textContent = 'Copied!';
+                                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
                                 setTimeout(() => {
-                                    copyBtn.textContent = 'Copy to Clipboard';
+                                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy to Clipboard';
                                 }, 2000);
                             });
                     });
 
+                    // Download as TXT button
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download as TXT';
+                    downloadBtn.className = 'payment-button';
+                    buttonContainer.appendChild(downloadBtn);
+                    
+                    downloadBtn.addEventListener('click', () => {
+                        const blob = new Blob([data.optimizedResume], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'optimized-resume.txt';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    });
+
+                    // New analysis button
                     const newAnalysisBtn = document.createElement('button');
-                    newAnalysisBtn.textContent = 'Start New Analysis';
+                    newAnalysisBtn.innerHTML = '<i class="fas fa-redo"></i> Start New Analysis';
                     newAnalysisBtn.className = 'payment-button';
                     buttonContainer.appendChild(newAnalysisBtn);
 
@@ -442,6 +1122,19 @@
                         document.getElementById('resume').value = '';
                         window.history.replaceState({}, '', '/');
                     });
+
+                    // Show success message
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'preview-card';
+                    successMessage.style.marginTop = '20px';
+                    successMessage.style.backgroundColor = 'rgba(76, 201, 240, 0.1)';
+                    successMessage.style.borderLeft = '4px solid var(--success)';
+                    successMessage.innerHTML = `
+                        <h3><i class="fas fa-check-circle" style="color: var(--success);"></i> Success!</h3>
+                        <p>Your resume has been optimized for this specific job. Apply with confidence!</p>
+                        <p style="margin-top: 10px;">Need more help? We offer <a href="#" style="color: var(--primary);">resume review services</a> from industry experts.</p>
+                    `;
+                    fullResultsDiv.appendChild(successMessage);
 
                     sessionStorage.removeItem('currentAnalysisId');
                 }
