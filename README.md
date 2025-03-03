@@ -75,9 +75,8 @@ pm2 start app.js --name "resume-builder"
 pm2 startup
 pm2 save
 ```
-```
 
-11. Enable SSL
+11. #### Enable SSL
 ```
 sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d resumebuilder.store -d www.resumebuilder.store
@@ -85,7 +84,7 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-12. Enable PosgresSQL
+12. #### Enable PosgresSQL
 ```
 sudo apt update
 sudo apt install postgresql postgresql-contrib
@@ -99,7 +98,7 @@ CREATE USER resumeuser WITH PASSWORD 'your_password';
 GRANT ALL PRIVILEGES ON DATABASE resumebuilder TO resumeuser;
 
 # Connect to the database
-```
+
 \c resumebuilder
 -- Users table (extends Firebase auth data)
 CREATE TABLE users (
@@ -130,12 +129,12 @@ CREATE TABLE analyses (
 \dt
 ```
 
-13. Integrate with postgress NodeJs app
+13. #### Integrate with postgress NodeJs app
 ```
 npm install pg
 ```
 
-14. Debugging SQL
+14. #### Debugging SQL
 ```
 SELECT * FROM users;
 
@@ -157,10 +156,17 @@ GRANT ALL PRIVILEGES ON DATABASE resumebuilder TO resumeuser;
 \du
 ```
 
-15. Debugging nodejs
+15. #### Debugging nodejs
 ```
 pm2 logs resume-builder --lines 1000
 pm2 restart resume-builder
 # when pulling new code make sure you npm install bring all dependencies
 npm install
 ```
+
+## Local testing on Ubuntu
+
+1. ### Local server start
+node app.js
+
+2. ### Enable strip test mode locally
