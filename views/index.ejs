@@ -770,58 +770,6 @@
                             <h3>Your Optimized Resume</h3>
                         </div>
                         <div id="optimizedResume"></div>
-                        <!-- Template Selection -->
-                        <div style="margin-top: 20px; margin-bottom: 20px;">
-                            <h3 style="color: var(--primary); display: flex; align-items: center; gap: 5px;">
-                                <i class="fas fa-palette"></i> Choose a Template
-                            </h3>
-                            <div id="templateSelector" style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px;">
-                                <div class="template-option" data-template="classic" style="border: 3px solid var(--primary); border-radius: 8px; padding: 10px; width: 120px; text-align: center; cursor: pointer;">
-                                    <div style="height: 120px; background-color: #f9f9ff; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 10px;">
-                                        <div style="width: 80%; height: 10px; background-color: var(--primary); margin-bottom: 5px;"></div>
-                                        <div style="width: 70%; height: 5px; background-color: #ddd; margin-bottom: 10px;"></div>
-                                        <div style="width: 90%; height: 40px; background-color: #eee;"></div>
-                                        <div style="width: 90%; height: 40px; background-color: #eee; margin-top: 5px;"></div>
-                                    </div>
-                                    <span>Classic</span>
-                                </div>
-                                <div class="template-option" data-template="modern" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; width: 120px; text-align: center; cursor: pointer;">
-                                    <div style="height: 120px; background-color: #f9f9ff; display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                        <div style="width: 30%; background-color: var(--primary-light);"></div>
-                                        <div style="width: 68%; display: flex; flex-direction: column; justify-content: center;">
-                                            <div style="width: 90%; height: 8px; background-color: #ddd; margin-bottom: 8px;"></div>
-                                            <div style="width: 70%; height: 8px; background-color: #ddd; margin-bottom: 20px;"></div>
-                                            <div style="width: 90%; height: 8px; background-color: #eee; margin-bottom: 5px;"></div>
-                                            <div style="width: 90%; height: 8px; background-color: #eee;"></div>
-                                        </div>
-                                    </div>
-                                    <span>Modern</span>
-                                </div>
-                                <div class="template-option" data-template="minimal" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; width: 120px; text-align: center; cursor: pointer;">
-                                    <div style="height: 120px; background-color: #f9f9ff; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; margin-bottom: 10px;">
-                                        <div style="width: 90%; height: 15px; background-color: #333; margin-top: 10px; margin-bottom: 10px;"></div>
-                                        <div style="width: 40%; height: 2px; background-color: var(--primary); margin-bottom: 15px;"></div>
-                                        <div style="width: 90%; height: 5px; background-color: #ddd; margin-bottom: 5px;"></div>
-                                        <div style="width: 90%; height: 5px; background-color: #ddd; margin-bottom: 5px;"></div>
-                                        <div style="width: 90%; height: 5px; background-color: #ddd;"></div>
-                                    </div>
-                                    <span>Minimal</span>
-                                </div>
-                                <div class="template-option" data-template="executive" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; width: 120px; text-align: center; cursor: pointer;">
-                                    <div style="height: 120px; background-color: #f9f9ff; display: flex; flex-direction: column; margin-bottom: 10px;">
-                                        <div style="height: 30px; background-color: var(--dark); display: flex; justify-content: center; align-items: center;">
-                                            <div style="width: 80%; height: 10px; background-color: #fff;"></div>
-                                        </div>
-                                        <div style="padding: 10px; display: flex; flex-direction: column; gap: 8px;">
-                                            <div style="width: 100%; height: 6px; background-color: #ddd;"></div>
-                                            <div style="width: 100%; height: 6px; background-color: #ddd;"></div>
-                                            <div style="width: 100%; height: 6px; background-color: #ddd;"></div>
-                                        </div>
-                                    </div>
-                                    <span>Executive</span>
-                                </div>
-                            </div>
-                        </div>
                         
                         <div class="action-buttons" id="resultButtons">
                             <!-- Buttons will be added via JavaScript -->
@@ -1641,6 +1589,317 @@ downloadEnhancedPdfBtn.addEventListener('click', () => {
                 .catch(error => console.error('Error in payment completion:', error));
             }
         });
+    </script>
+    <script>
+        // Add the entire single-template script here
+        document.addEventListener('DOMContentLoaded', function() {
+  console.log("PDF preview implementation loaded");
+  
+  // Replace the template selector with a simple indicator
+  const templateSelector = document.querySelector('#templateSelector');
+  if (templateSelector && templateSelector.parentElement) {
+    templateSelector.parentElement.innerHTML = `
+      <h3 style="color: var(--primary); display: flex; align-items: center; gap: 5px; margin-bottom: 20px;">
+        <i class="fas fa-file-pdf"></i> Professional PDF Resume
+      </h3>
+    `;
+  }
+  
+  // Function to update the fullResults section with PDF preview
+  function updateWithPDFPreview(resumeText) {
+    console.log("Updating with PDF preview");
+    
+    const resumeDiv = document.getElementById('optimizedResume');
+    if (!resumeDiv) {
+      console.error("Resume div not found");
+      return;
+    }
+    
+    // Create a loading indicator
+    resumeDiv.innerHTML = `
+      <div style="text-align: center; padding: 30px;">
+        <div style="font-size: 24px; margin-bottom: 20px; color: var(--primary);">
+          <i class="fas fa-spinner fa-spin"></i>
+        </div>
+        <p>Generating your professional resume preview...</p>
+      </div>
+    `;
+    
+    // Generate PDF and create inline preview
+    fetch('/convert-to-pdf-better', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: resumeText })
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('PDF generation failed');
+      return response.arrayBuffer();
+    })
+    .then(buffer => {
+      // Convert ArrayBuffer to Base64
+      const binary = new Uint8Array(buffer);
+      let binaryString = '';
+      binary.forEach(byte => binaryString += String.fromCharCode(byte));
+      const base64 = btoa(binaryString);
+      
+      // Create PDF viewer with object tag (works better than iframe)
+      resumeDiv.innerHTML = `
+        <div style="height: 800px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+          <object data="data:application/pdf;base64,${base64}" type="application/pdf" width="100%" height="100%">
+            <div style="text-align: center; padding: 30px; background: #f8f9fa;">
+              <p>Your browser doesn't support embedded PDFs.</p>
+              <button id="downloadPdfBtn" class="payment-button" style="margin-top: 15px;">
+                <i class="fas fa-download"></i> Download PDF
+              </button>
+            </div>
+          </object>
+        </div>
+      `;
+      
+      // Add download button for the fallback case
+      const downloadBtn = document.getElementById('downloadPdfBtn');
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+          const blob = new Blob([buffer], {type: 'application/pdf'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'optimized-resume.pdf';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Error generating PDF preview:', error);
+      resumeDiv.innerHTML = `
+        <div style="text-align: center; padding: 30px; background: #fff0f0; border: 1px solid #ffcdd2; border-radius: 8px;">
+          <p style="color: #d32f2f; margin-bottom: 15px;">
+            <i class="fas fa-exclamation-circle"></i> 
+            Unable to generate PDF preview
+          </p>
+          <p>Don't worry - you can still download your resume as PDF or text.</p>
+        </div>
+      `;
+    });
+  }
+  
+  // Override the fetchPaidResults function if it exists
+  if (window.fetchPaidResults) {
+    console.log("Override fetchPaidResults function");
+    const originalFetchPaidResults = window.fetchPaidResults;
+    
+    window.fetchPaidResults = async function(analysisId) {
+      try {
+        console.log("Fetching paid results for analysis:", analysisId);
+        const response = await fetch('/get-full-results', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ analysisId })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          console.log("Received successful results");
+          
+          // Show full results
+          const fullResultsDiv = document.getElementById('fullResults');
+          if (fullResultsDiv) {
+            fullResultsDiv.style.display = 'block';
+          }
+          
+          // Store the plain text version
+          const plainTextResume = data.optimizedResume;
+          console.log("Resume content length:", plainTextResume.length);
+          
+          // Update with PDF preview
+          updateWithPDFPreview(plainTextResume);
+          
+          // Hide preview section
+          const previewSection = document.getElementById('previewSection');
+          if (previewSection) {
+            previewSection.style.display = 'none';
+          }
+          
+          // Update action buttons
+          setupResultButtons(plainTextResume);
+          
+          sessionStorage.removeItem('currentAnalysisId');
+        } else {
+          console.error("Error in results:", data);
+          alert('Error retrieving your results. Please contact support.');
+        }
+      } catch (error) {
+        console.error('Error fetching results:', error);
+        alert('Error retrieving your results. Please contact support.');
+      }
+    };
+  }
+
+  // Function to set up the download and copy buttons
+  function setupResultButtons(plainTextResume) {
+    const buttonContainer = document.getElementById('resultButtons');
+    if (!buttonContainer) {
+      console.error("Button container not found");
+      return;
+    }
+
+    buttonContainer.innerHTML = '';
+    
+    // Copy button
+    const copyBtn = document.createElement('button');
+    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy to Clipboard';
+    copyBtn.className = 'payment-button';
+    buttonContainer.appendChild(copyBtn);
+
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(plainTextResume)
+        .then(() => {
+          copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+          setTimeout(() => {
+            copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy to Clipboard';
+          }, 2000);
+        });
+    });
+
+    // Download buttons
+    const downloadContainer = document.createElement('div');
+    downloadContainer.style.display = 'flex';
+    downloadContainer.style.gap = '10px';
+    downloadContainer.style.flexWrap = 'wrap';
+    buttonContainer.appendChild(downloadContainer);
+    
+    // Download as TXT button
+    const downloadTxtBtn = document.createElement('button');
+    downloadTxtBtn.innerHTML = '<i class="fas fa-download"></i> Download as TXT';
+    downloadTxtBtn.className = 'payment-button';
+    downloadContainer.appendChild(downloadTxtBtn);
+    
+    downloadTxtBtn.addEventListener('click', () => {
+      const blob = new Blob([plainTextResume], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'optimized-resume.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+    
+    // PDF Download button
+    const downloadPdfBtn = document.createElement('button');
+    downloadPdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download as PDF';
+    downloadPdfBtn.className = 'payment-button';
+    downloadContainer.appendChild(downloadPdfBtn);
+
+    downloadPdfBtn.addEventListener('click', () => {
+      // Show loading state
+      downloadPdfBtn.disabled = true;
+      downloadPdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+      
+      fetch('/convert-to-pdf-better', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: plainTextResume })
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('PDF generation failed');
+        return response.arrayBuffer();
+      })
+      .then(buffer => {
+        const blob = new Blob([buffer], {type: 'application/pdf'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'optimized-resume.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Reset button state
+        downloadPdfBtn.disabled = false;
+        downloadPdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download as PDF';
+      })
+      .catch(error => {
+        console.error('Error generating PDF:', error);
+        alert('There was an error generating your PDF. Please try again.');
+        
+        // Reset button state
+        downloadPdfBtn.disabled = false;
+        downloadPdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download as PDF';
+      });
+    });
+
+    // New analysis button
+    const newAnalysisBtn = document.createElement('button');
+    newAnalysisBtn.innerHTML = '<i class="fas fa-redo"></i> Start New Analysis';
+    newAnalysisBtn.className = 'payment-button';
+    buttonContainer.appendChild(newAnalysisBtn);
+
+    newAnalysisBtn.addEventListener('click', () => {
+      const resumeForm = document.getElementById('resumeForm');
+      if (resumeForm) resumeForm.style.display = 'block';
+      
+      const resultDiv = document.getElementById('result');
+      if (resultDiv) resultDiv.style.display = 'none';
+      
+      const fullResultsDiv = document.getElementById('fullResults');
+      if (fullResultsDiv) fullResultsDiv.style.display = 'none';
+      
+      const jobDescription = document.getElementById('jobDescription');
+      if (jobDescription) jobDescription.value = '';
+      
+      const resume = document.getElementById('resume');
+      if (resume) resume.value = '';
+      
+      window.history.replaceState({}, '', '/');
+    });
+
+    // Success message
+    const fullResultsDiv = document.getElementById('fullResults');
+    if (fullResultsDiv) {
+      const existingSuccessMessage = fullResultsDiv.querySelector('.preview-card');
+      if (!existingSuccessMessage) {
+        const successMessage = document.createElement('div');
+        successMessage.className = 'preview-card';
+        successMessage.style.marginTop = '20px';
+        successMessage.style.backgroundColor = 'rgba(76, 201, 240, 0.1)';
+        successMessage.style.borderLeft = '4px solid var(--success)';
+        successMessage.innerHTML = `
+          <h3><i class="fas fa-check-circle" style="color: var(--success);"></i> Success!</h3>
+          <p>Your resume has been optimized for this specific job. Apply with confidence!</p>
+          <p style="margin-top: 10px;">Need more help? We offer <a href="#" style="color: var(--primary);">resume review services</a> from industry experts.</p>
+        `;
+        fullResultsDiv.appendChild(successMessage);
+      }
+    }
+  }
+
+  // Check if we need to process results from a payment redirect
+  const urlParams = new URLSearchParams(window.location.search);
+  const redirectStatus = urlParams.get('redirect_status');
+  
+  if (redirectStatus === 'succeeded') {
+    console.log("Detected payment redirect");
+    
+    // Find existing resume content if available
+    const resumeDiv = document.getElementById('optimizedResume');
+    if (resumeDiv && resumeDiv.textContent && resumeDiv.textContent.trim().length > 0) {
+      console.log("Found existing resume content, generating PDF preview");
+      updateWithPDFPreview(resumeDiv.textContent);
+    }
+  }
+});
     </script>
 </body>
 </html>
