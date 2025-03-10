@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume Rocket | AI-Powered Resume Optimization</title>
+    <title>Resume Builder | AI-Powered Resume Optimization</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -557,6 +557,58 @@
                 gap: 1.5rem;
             }
         }
+
+        #loginBtn {
+            background-color: #4285F4; /* Google blue */
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        #loginBtn:hover {
+            background-color: #3367d6; /* Darker Google blue on hover */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        #loginBtn .fab.fa-google {
+            font-size: 1.1rem;
+        }
+
+        #userName {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #userName::before {
+            content: '\f007'; /* Font Awesome user icon */
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+        }
+
+        #logoutBtn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        #logoutBtn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -565,10 +617,12 @@
 <body>
     <div class="page-container">
         <!-- Navigation -->
+
+        <!-- Navigation -->
         <nav class="navbar">
             <div class="navbar-inner">
                 <div class="logo">
-                    <i class="fas fa-rocket"></i> Resume Rocket
+                    <i class="fas fa-file-alt"></i> Resume Builder
                 </div>
                 <div id="userStatus">
                     <span id="userName"></span>
@@ -647,7 +701,7 @@
                             
                             <!-- Score Meter -->
                             <div>
-                                <h3>Keyword Match Score</h3>
+                                <h3>ATS Compatibility Score</h3>
                                 <div class="score-meter">
                                     <div class="score-fill" id="scoreFill" style="width: 0%"></div>
                                 </div>
@@ -658,6 +712,39 @@
                             <div>
                                 <h3>Top Matching Keywords</h3>
                                 <div class="keyword-pills" id="keywordList"></div>
+                            </div>
+                            
+                            <!-- ATS Analysis -->
+                            <div id="atsAnalysis" style="margin-top: 20px;">
+                                <h3><i class="fas fa-search"></i> Detailed ATS Analysis</h3>
+                                
+                                <div style="margin-top: 15px;">
+                                    <h4 style="color: var(--danger); display: flex; align-items: center; gap: 5px;">
+                                        <i class="fas fa-exclamation-circle"></i> Missing Keywords
+                                    </h4>
+                                    <div class="keyword-pills" id="missingKeywordsList"></div>
+                                </div>
+                                
+                                <div style="margin-top: 15px;">
+                                    <h4 style="color: #f72585; display: flex; align-items: center; gap: 5px;">
+                                        <i class="fas fa-exclamation-triangle"></i> Format Issues
+                                    </h4>
+                                    <ul id="formatIssuesList" style="margin-left: 25px;"></ul>
+                                </div>
+                                
+                                <div style="margin-top: 15px;">
+                                    <h4 style="color: var(--primary); display: flex; align-items: center; gap: 5px;">
+                                        <i class="fas fa-lightbulb"></i> Improvement Suggestions
+                                    </h4>
+                                    <ul id="improvementsList" style="margin-left: 25px;"></ul>
+                                </div>
+                                
+                                <div style="margin-top: 15px;">
+                                    <h4 style="color: var(--success); display: flex; align-items: center; gap: 5px;">
+                                        <i class="fas fa-check-circle"></i> Key Strengths
+                                    </h4>
+                                    <ul id="strengthsList" style="margin-left: 25px;"></ul>
+                                </div>
                             </div>
                         </div>
                         
@@ -683,6 +770,59 @@
                             <h3>Your Optimized Resume</h3>
                         </div>
                         <div id="optimizedResume"></div>
+                        <!-- Template Selection -->
+                        <div style="margin-top: 20px; margin-bottom: 20px;">
+                            <h3 style="color: var(--primary); display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-palette"></i> Choose a Template
+                            </h3>
+                            <div id="templateSelector" style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px;">
+                                <div class="template-option" data-template="classic" style="border: 3px solid var(--primary); border-radius: 8px; padding: 10px; width: 120px; text-align: center; cursor: pointer;">
+                                    <div style="height: 120px; background-color: #f9f9ff; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 10px;">
+                                        <div style="width: 80%; height: 10px; background-color: var(--primary); margin-bottom: 5px;"></div>
+                                        <div style="width: 70%; height: 5px; background-color: #ddd; margin-bottom: 10px;"></div>
+                                        <div style="width: 90%; height: 40px; background-color: #eee;"></div>
+                                        <div style="width: 90%; height: 40px; background-color: #eee; margin-top: 5px;"></div>
+                                    </div>
+                                    <span>Classic</span>
+                                </div>
+                                <div class="template-option" data-template="modern" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; width: 120px; text-align: center; cursor: pointer;">
+                                    <div style="height: 120px; background-color: #f9f9ff; display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                        <div style="width: 30%; background-color: var(--primary-light);"></div>
+                                        <div style="width: 68%; display: flex; flex-direction: column; justify-content: center;">
+                                            <div style="width: 90%; height: 8px; background-color: #ddd; margin-bottom: 8px;"></div>
+                                            <div style="width: 70%; height: 8px; background-color: #ddd; margin-bottom: 20px;"></div>
+                                            <div style="width: 90%; height: 8px; background-color: #eee; margin-bottom: 5px;"></div>
+                                            <div style="width: 90%; height: 8px; background-color: #eee;"></div>
+                                        </div>
+                                    </div>
+                                    <span>Modern</span>
+                                </div>
+                                <div class="template-option" data-template="minimal" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; width: 120px; text-align: center; cursor: pointer;">
+                                    <div style="height: 120px; background-color: #f9f9ff; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; margin-bottom: 10px;">
+                                        <div style="width: 90%; height: 15px; background-color: #333; margin-top: 10px; margin-bottom: 10px;"></div>
+                                        <div style="width: 40%; height: 2px; background-color: var(--primary); margin-bottom: 15px;"></div>
+                                        <div style="width: 90%; height: 5px; background-color: #ddd; margin-bottom: 5px;"></div>
+                                        <div style="width: 90%; height: 5px; background-color: #ddd; margin-bottom: 5px;"></div>
+                                        <div style="width: 90%; height: 5px; background-color: #ddd;"></div>
+                                    </div>
+                                    <span>Minimal</span>
+                                </div>
+                                <div class="template-option" data-template="executive" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; width: 120px; text-align: center; cursor: pointer;">
+                                    <div style="height: 120px; background-color: #f9f9ff; display: flex; flex-direction: column; margin-bottom: 10px;">
+                                        <div style="height: 30px; background-color: var(--dark); display: flex; justify-content: center; align-items: center;">
+                                            <div style="width: 80%; height: 10px; background-color: #fff;"></div>
+                                        </div>
+                                        <div style="padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                                            <div style="width: 100%; height: 6px; background-color: #ddd;"></div>
+                                            <div style="width: 100%; height: 6px; background-color: #ddd;"></div>
+                                            <div style="width: 100%; height: 6px; background-color: #ddd;"></div>
+                                        </div>
+                                    </div>
+                                    <span>Executive</span>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="action-buttons" id="resultButtons">
                             <!-- Buttons will be added via JavaScript -->
                         </div>
@@ -696,7 +836,7 @@
                 <div class="testimonial-grid">
                     <div class="testimonial-card">
                         <div class="testimonial-content">
-                            <p>After updating my resume with Resume Rocket, I started getting interview calls within days. I landed a job at a top tech company!</p>
+                            <p>After updating my resume with Resume Builder, I started getting interview calls within days. I landed a job at a top tech company!</p>
                         </div>
                         <div class="testimonial-author">
                             <div class="author-image">JS</div>
@@ -720,7 +860,7 @@
                     </div>
                     <div class="testimonial-card">
                         <div class="testimonial-content">
-                            <p>As a career changer, I was struggling to highlight my transferable skills. Resume Rocket helped me create a resume that got me noticed in a new industry.</p>
+                            <p>As a career changer, I was struggling to highlight my transferable skills. Resume Builder helped me create a resume that got me noticed in a new industry.</p>
                         </div>
                         <div class="testimonial-author">
                             <div class="author-image">AL</div>
@@ -735,7 +875,7 @@
             
             <!-- Features -->
             <div class="features">
-                <h2 class="features-title">Why Choose Resume Rocket</h2>
+                <h2 class="features-title">Why Choose Resume Builder</h2>
                 <div class="features-grid">
                     <div class="feature-card">
                         <div class="feature-icon">
@@ -767,7 +907,7 @@
             <div class="footer-content">
                 <div class="footer-about">
                     <div class="footer-logo">
-                        <i class="fas fa-rocket"></i> Resume Rocket
+                        <i class="fas fa-file-alt"></i> Resume Builder
                     </div>
                     <p>AI-powered resume optimization to help you land your dream job.</p>
                 </div>
@@ -789,7 +929,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 Resume Rocket. All Rights Reserved.</p>
+                <p>&copy; 2025 Resume Builder. All Rights Reserved.</p>
             </div>
         </footer>
     </div>
@@ -809,7 +949,7 @@
         firebase.initializeApp(firebaseConfig);
 
         // Initialize Stripe
-        const stripe = Stripe('pk_live_51Qbz0xA4w79MCEbrRbVLfO3p712GKFY3uvtt2nJ98Z2kW7MVGTu7ZKNypD9j1e4mOt0uKeaP0yY0q8gZl6TqqIf500qKPbABs1');
+        const stripe = Stripe('pk_test_51Qbz0xA4w79MCEbrndfTRU1kGUSlu8haJi1xQrSyhErR43l3P12ql31w4qnrOyibYvc9vYwmTi5NgVz8mcbxJ5P700ttLuIYuA');
 
         // Global variables for DOM elements
         const loginBtn = document.getElementById('loginBtn');
@@ -837,7 +977,7 @@
                 
                 this.paymentSection.innerHTML = `
                     <button id="buyButton" class="payment-button">
-                        Unlock Full Results ($5)
+                        Unlock Full Results ($0.99)
                     </button>
                 `;
                 
@@ -920,13 +1060,60 @@
                 const scoreFill = document.getElementById('scoreFill');
                 const scoreText = document.getElementById('scoreText');
                 scoreFill.style.width = `${data.score}%`;
-                scoreText.textContent = `Your resume matches ${data.score}% of keywords in this job description`;
+                scoreText.textContent = `Your resume has an ATS compatibility score of ${data.score}%`;
                 
                 // Update keywords list
                 const keywordList = document.getElementById('keywordList');
                 keywordList.innerHTML = data.matchingWords.map(keyword => 
                     `<div class="keyword-pill"><i class="fas fa-check-circle"></i> ${keyword}</div>`
                 ).join('');
+                
+                // Update ATS analysis if available
+                if (data.atsAnalysis) {
+                    // Missing keywords
+                    const missingKeywordsList = document.getElementById('missingKeywordsList');
+                    if (data.atsAnalysis.missingKeywords && data.atsAnalysis.missingKeywords.length > 0) {
+                        missingKeywordsList.innerHTML = data.atsAnalysis.missingKeywords.map(keyword => 
+                            `<div class="keyword-pill" style="background-color: rgba(247, 37, 133, 0.1); border: 1px solid var(--danger);">
+                                <i class="fas fa-times" style="color: var(--danger);"></i> ${keyword}
+                            </div>`
+                        ).join('');
+                    } else {
+                        missingKeywordsList.innerHTML = '<p>No critical keywords missing</p>';
+                    }
+                    
+                    // Format issues
+                    const formatIssuesList = document.getElementById('formatIssuesList');
+                    if (data.atsAnalysis.formatIssues && data.atsAnalysis.formatIssues.length > 0) {
+                        formatIssuesList.innerHTML = data.atsAnalysis.formatIssues.map(issue => 
+                            `<li>${issue}</li>`
+                        ).join('');
+                    } else {
+                        formatIssuesList.innerHTML = '<li>No major formatting issues detected</li>';
+                    }
+                    
+                    // Improvement suggestions
+                    const improvementsList = document.getElementById('improvementsList');
+                    if (data.atsAnalysis.improvementSuggestions && data.atsAnalysis.improvementSuggestions.length > 0) {
+                        improvementsList.innerHTML = data.atsAnalysis.improvementSuggestions.map(suggestion => 
+                            `<li>${suggestion}</li>`
+                        ).join('');
+                    } else {
+                        improvementsList.innerHTML = '<li>No specific improvement suggestions</li>';
+                    }
+                    
+                    // Key strengths
+                    const strengthsList = document.getElementById('strengthsList');
+                    if (data.atsAnalysis.keyStrengths && data.atsAnalysis.keyStrengths.length > 0) {
+                        strengthsList.innerHTML = data.atsAnalysis.keyStrengths.map(strength => 
+                            `<li>${strength}</li>`
+                        ).join('');
+                    } else {
+                        strengthsList.innerHTML = '<li>No specific strengths highlighted</li>';
+                    }
+                } else {
+                    document.getElementById('atsAnalysis').style.display = 'none';
+                }
                 
                 // Update preview points
                 document.getElementById('previewPoints').innerHTML = `
@@ -971,7 +1158,7 @@
                 }
             },
 
-            async showPaymentForm(clientSecret) {
+                        async showPaymentForm(clientSecret) {
                 const appearance = {
                     theme: 'stripe',
                     variables: { 
@@ -986,8 +1173,8 @@
                 };
 
                 const elements = stripe.elements({ appearance, clientSecret });
-                const paymentElement = elements.create('payment');
-
+                
+                // Clear previous content and prepare container
                 this.paymentSection.innerHTML = `
                     <div class="preview-card" style="margin-bottom: 20px; background-color: rgba(76, 201, 240, 0.1); border-left: 4px solid var(--success);">
                         <h3><i class="fas fa-lock"></i> Secure Checkout</h3>
@@ -998,14 +1185,19 @@
                     </div>
                     <div id="payment-form" style="padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);"></div>
                     <button class="payment-button" id="payNowButton" style="margin-top: 20px;">
-                        <i class="fas fa-credit-card"></i> Pay $0.50
+                        <i class="fas fa-credit-card"></i> Pay $0.99
                     </button>
                     <p style="margin-top: 15px; font-size: 0.9rem; color: #666; text-align: center;">
                         <i class="fas fa-info-circle"></i> You'll only be charged once, no subscription.
                     </p>
                 `;
 
+                // Create and mount the Payment Element
+                const paymentElement = elements.create('payment');
                 paymentElement.mount('#payment-form');
+                
+                // Important: Wait for the element to be fully mounted
+                await new Promise(resolve => setTimeout(resolve, 100));
 
                 const payNowButton = document.getElementById('payNowButton');
                 payNowButton.addEventListener('click', async (e) => {
@@ -1013,6 +1205,7 @@
                     payNowButton.disabled = true;
                     payNowButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
+                    // Now confirm the payment with the mounted element
                     const { error } = await stripe.confirmPayment({
                         elements,
                         confirmParams: {
@@ -1022,7 +1215,7 @@
 
                     if (error) {
                         payNowButton.disabled = false;
-                        payNowButton.innerHTML = '<i class="fas fa-credit-card"></i> Pay $0.50';
+                        payNowButton.innerHTML = '<i class="fas fa-credit-card"></i> Pay $0.99';
                         
                         // Show error in a nicer way
                         const errorDiv = document.createElement('div');
@@ -1067,6 +1260,165 @@
                     optimizedResumeDiv.innerHTML = data.optimizedResume;
                     optimizedResumeDiv.style.whiteSpace = 'pre-wrap';
                     
+                    // Setup template selection
+                    const templateOptions = document.querySelectorAll('.template-option');
+                    let currentResumeContent = data.optimizedResume;
+                    let currentTemplate = 'classic';
+                    
+                    templateOptions.forEach(option => {
+                        option.addEventListener('click', () => {
+                            // Remove selection from all templates
+                            templateOptions.forEach(t => {
+                                t.style.border = '1px solid #ddd';
+                            });
+                            
+                            // Select current template
+                            option.style.border = '3px solid var(--primary)';
+                            
+                            // Apply template formatting
+                            const templateName = option.getAttribute('data-template');
+                            currentTemplate = templateName;
+                            
+                            applyTemplate(templateName, currentResumeContent);
+                        });
+                    });
+                    
+                    function applyTemplate(templateName, content) {
+                        const resumeDiv = document.getElementById('optimizedResume');
+                        
+                        // Parse resume content into sections safely
+                        const sections = content.split('\n\n').filter(s => s && s.trim());
+                        
+                        // Default, safe handling
+                        if (templateName === 'classic' || sections.length === 0) {
+                            resumeDiv.innerHTML = content.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+                            resumeDiv.style.whiteSpace = 'pre-wrap';
+                            return;
+                        }
+                        
+                        // Get first section safely
+                        const firstSection = sections[0] || '';
+                        const firstLines = firstSection.split('\n');
+                        const headerText = firstLines[0] || (templateName === 'executive' ? 'Executive Resume' : 'Resume');
+                        const contactInfo = firstLines.length > 1 ? firstLines.slice(1) : [];
+                        
+                        // Skills section
+                        const skillsSection = sections.find(s => s && s.toLowerCase().includes('skills')) || '';
+                        
+                        try {
+                            switch(templateName) {
+                                case 'modern':
+                                    resumeDiv.innerHTML = `
+                                    <div style="display: flex; font-family: 'Inter', sans-serif;">
+                                        <div style="width: 30%; background-color: var(--primary-light); color: white; padding: 20px;">
+                                            <h2 style="margin-bottom: 20px; border-bottom: 2px solid white; padding-bottom: 10px; font-family: 'Poppins', sans-serif;">
+                                                ${headerText}
+                                            </h2>
+                                            <div style="margin-bottom: 30px;">
+                                                ${contactInfo.join('<br>')}
+                                            </div>
+                                            <h3 style="margin-bottom: 15px; border-bottom: 1px solid white; padding-bottom: 5px; font-family: 'Poppins', sans-serif;">Skills</h3>
+                                            <div>
+                                                ${skillsSection}
+                                            </div>
+                                        </div>
+                                        <div style="width: 70%; padding: 20px;">
+                                            <div style="margin-bottom: 25px;">
+                                                ${sections.length > 1 ? sections[1] : ''}
+                                            </div>
+                                            <div>
+                                                ${sections.length > 2 ? 
+                                                  sections.slice(2)
+                                                    .filter(s => s && !s.toLowerCase().includes('skills'))
+                                                    .join('<div style="margin-top: 20px;"></div>') 
+                                                  : ''}
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                    break;
+                                    
+                                case 'minimal':
+                                    // Build section HTML safely
+                                    let sectionHtml = '';
+                                    if (sections.length > 1) {
+                                        sectionHtml = sections.slice(1).map(section => {
+                                            if (!section) return '';
+                                            const secLines = section.split('\n');
+                                            const secHeader = secLines[0] || '';
+                                            const secContent = secLines.length > 1 ? secLines.slice(1).join('<br>') : '';
+                                            
+                                            return `<div style="margin-bottom: 20px;">
+                                                <h2 style="font-size: 18px; font-family: 'Poppins', sans-serif; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                                                    ${secHeader}
+                                                </h2>
+                                                <div>${secContent}</div>
+                                            </div>`;
+                                        }).join('');
+                                    }
+                                    
+                                    resumeDiv.innerHTML = `
+                                    <div style="font-family: 'Inter', sans-serif; padding: 10px;">
+                                        <h1 style="text-align: center; font-family: 'Poppins', sans-serif; font-size: 24px; margin-bottom: 5px;">
+                                            ${headerText}
+                                        </h1>
+                                        <div style="width: 100px; height: 3px; background-color: var(--primary); margin: 0 auto 20px;"></div>
+                                        <div style="text-align: center; margin-bottom: 25px; color: #666;">
+                                            ${contactInfo.join(' | ')}
+                                        </div>
+                                        ${sectionHtml}
+                                    </div>`;
+                                    break;
+                                    
+                                case 'executive':
+                                    // Build section HTML safely
+                                    let execSectionHtml = '';
+                                    if (sections.length > 1) {
+                                        execSectionHtml = sections.slice(1).map(section => {
+                                            if (!section) return '';
+                                            const secLines = section.split('\n');
+                                            const secHeader = secLines[0] || '';
+                                            const secContent = secLines.length > 1 ? secLines.slice(1).join('<br>') : '';
+                                            
+                                            return `<div style="margin-bottom: 25px;">
+                                                <h2 style="font-size: 20px; color: var(--primary-dark); font-family: 'Poppins', sans-serif; margin-bottom: 10px; 
+                                                    text-transform: uppercase; letter-spacing: 1px;">
+                                                    ${secHeader}
+                                                </h2>
+                                                <div style="border-left: 3px solid var(--primary); padding-left: 15px;">
+                                                    ${secContent}
+                                                </div>
+                                            </div>`;
+                                        }).join('');
+                                    }
+                                    
+                                    resumeDiv.innerHTML = `
+                                    <div style="font-family: 'Inter', sans-serif;">
+                                        <div style="background-color: var(--dark); color: white; padding: 20px; text-align: center;">
+                                            <h1 style="font-family: 'Poppins', sans-serif; font-size: 28px; margin-bottom: 10px;">
+                                                ${headerText}
+                                            </h1>
+                                            <div>${contactInfo.join(' | ')}</div>
+                                        </div>
+                                        <div style="padding: 20px;">
+                                            ${execSectionHtml}
+                                        </div>
+                                    </div>`;
+                                    break;
+                                    
+                                default:
+                                    // Default, just show plain text with basic formatting
+                                    resumeDiv.innerHTML = content.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+                                    resumeDiv.style.whiteSpace = 'pre-wrap';
+                                    break;
+                            }
+                        } catch (error) {
+                            console.error("Template error:", error);
+                            // Fallback to classic on error
+                            resumeDiv.innerHTML = content.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+                            resumeDiv.style.whiteSpace = 'pre-wrap';
+                        }
+                    }
+                    
                     // Hide preview section
                     document.getElementById('previewSection').style.display = 'none';
                     
@@ -1090,13 +1442,20 @@
                             });
                     });
 
-                    // Download as TXT button
-                    const downloadBtn = document.createElement('button');
-                    downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download as TXT';
-                    downloadBtn.className = 'payment-button';
-                    buttonContainer.appendChild(downloadBtn);
+                    // Download buttons
+                    const downloadContainer = document.createElement('div');
+                    downloadContainer.style.display = 'flex';
+                    downloadContainer.style.gap = '10px';
+                    downloadContainer.style.flexWrap = 'wrap';
+                    buttonContainer.appendChild(downloadContainer);
                     
-                    downloadBtn.addEventListener('click', () => {
+                    // Download as TXT button
+                    const downloadTxtBtn = document.createElement('button');
+                    downloadTxtBtn.innerHTML = '<i class="fas fa-download"></i> Download as TXT';
+                    downloadTxtBtn.className = 'payment-button';
+                    downloadContainer.appendChild(downloadTxtBtn);
+                    
+                    downloadTxtBtn.addEventListener('click', () => {
                         const blob = new Blob([data.optimizedResume], { type: 'text/plain' });
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
@@ -1107,6 +1466,53 @@
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
                     });
+                    
+// Client-side code
+const downloadEnhancedPdfBtn = document.createElement('button');
+downloadEnhancedPdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download as PDF';
+downloadEnhancedPdfBtn.className = 'payment-button';
+downloadContainer.appendChild(downloadEnhancedPdfBtn);
+
+downloadEnhancedPdfBtn.addEventListener('click', () => {
+    // Show loading state
+    downloadEnhancedPdfBtn.disabled = true;
+    downloadEnhancedPdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+    
+    fetch('/convert-to-pdf-better', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: data.optimizedResume })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('PDF generation failed');
+        return response.arrayBuffer();
+    })
+    .then(buffer => {
+        const blob = new Blob([buffer], {type: 'application/pdf'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'optimized-resume.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Reset button state
+        downloadEnhancedPdfBtn.disabled = false;
+        downloadEnhancedPdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download as PDF';
+    })
+    .catch(error => {
+        console.error('Error generating PDF:', error);
+        alert('There was an error generating your PDF. Please try again.');
+        
+        // Reset button state
+        downloadEnhancedPdfBtn.disabled = false;
+        downloadEnhancedPdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i> Download as PDF';
+    });
+});
 
                     // New analysis button
                     const newAnalysisBtn = document.createElement('button');

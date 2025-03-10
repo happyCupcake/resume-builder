@@ -43,6 +43,53 @@ async function detectField(jobDescription, experience) {
     }
 }
 
+// Analyze resume with ATS scoring
+async function analyzeATS(jobDescription, resume) {
+    try {
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{
+                role: "system",
+                content: `You are an expert ATS (Applicant Tracking System) analyst. Evaluate how well the provided resume would perform in an ATS scan for the given job description.
+
+                Provide your response in the following JSON format:
+                {
+                  "atsScore": [0-100 numerical score],
+                  "missingKeywords": [array of important keywords from the job description that are missing in the resume],
+                  "formatIssues": [array of formatting issues that might cause ATS problems],
+                  "improvementSuggestions": [array of specific suggestions to improve ATS performance],
+                  "keyStrengths": [array of aspects where the resume already performs well]
+                }
+                
+                Consider the following factors in your assessment:
+                1. Keyword matching between resume and job description
+                2. Use of standard section headings and formatting
+                3. Absence of tables, graphics, and complex formatting
+                4. Appropriate use of job titles and industry terminology
+                5. Overall alignment between resume skills and job requirements
+                
+                Return ONLY the JSON object with no additional text.`
+            }, {
+                role: "user",
+                content: `JOB DESCRIPTION:
+                
+                ${jobDescription}
+                
+                RESUME:
+                
+                ${resume}`
+            }],
+            temperature: 0.3,
+            response_format: { type: "json_object" }
+        });
+
+        return JSON.parse(response.choices[0].message.content);
+    } catch (error) {
+        console.error('OpenAI API Error:', error);
+        throw new Error('Failed to analyze ATS compatibility');
+    }
+}
+
 // Enhanced resume optimization function with ATS optimization
 async function optimizeResume(jobDescription, resume, field) {
     try {
@@ -103,5 +150,6 @@ async function optimizeResume(jobDescription, resume, field) {
 
 module.exports = {
     detectField,
+    analyzeATS,
     optimizeResume
 };
